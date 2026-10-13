@@ -1,38 +1,75 @@
 # H hub
 
-当前桌面端与手机端项目源码。桌面端为 Windows 11 x64 原生 WinUI 3 / C++/WinRT 应用，尚未迁移为 WebUI。桌面版本元数据为 1.0.9，源码包含此版本之后的本机修复。
+**H hub 是一款面向 Windows 11 的原生设备控制中心。**
+
+项目希望通过统一的界面管理不同品牌的外设、硬件状态、音频均衡器和使用场景，并提供 Android 手机端远程控制能力，减少在多个品牌软件之间切换的需求。
+
+桌面端采用 **WinUI 3 / C++/WinRT** 开发，面向 **Windows 11 x64**。项目仍在持续开发，具体功能取决于设备插件、硬件及系统环境。
+
+## 主要功能
+
+- **跨品牌外设管理**：采用可扩展的设备插件架构，统一展示和管理已适配外设的状态与参数。并非所有品牌或型号都已支持。
+- **多配置与场景**：为外设保存不同配置，通过场景组织和切换设备设置；支持手动切换及已有的自动处理逻辑。
+- **硬件状态监测**：集中查看电脑的硬件运行信息，具体监测项目由设备和监测组件决定。
+- **音频均衡器（EQ）**：集成基于 FxSound 的 EQ，默认 **10 段**，可调整频率与增益。架构不以固定段数为设计上限；**当前桌面设置界面支持 1–12 段**，更多频段仍需界面及性能验证。支持预设、应用与输出相关的音频配置。
+- **Android 手机控制**：通过局域网 HTTPS 配对，在手机上查看电脑状态，并操作已开放的场景、外设参数和电脑端 EQ。手机端不处理手机本地音频。
+- **模块化设计**：将桌面界面、核心服务、设备适配、音频处理和手机连接分离，便于维护与扩展。
+
+## 项目特点
+
+H hub 的目标不是只服务于某一个外设品牌，而是将原本分散的设备控制功能整合到一个应用中。项目注重原生 Windows 体验、简洁界面和按需启用模块。
+
+**说明：** 原生技术栈和模块化设计不等于已经证明更低的内存占用或更好的性能；相关优势需要持续通过实测验证。
 
 ## 项目结构
 
-- `source/`：桌面界面、独立核心、硬件监测、原生 HID、音频处理、场景与手机连接服务，以及测试和构建脚本。
-- `app/assets/`：桌面产品资源；`app/phone-web/`：浏览器手机端页面；`app/sensors/`：监测配置与依赖许可。
-- `mobile/android/`：独立 Android 手机 App，包括 Java 源码、Manifest、资源、构建和测试脚本。
-- `installer/`：桌面安装器源码和可选驱动安装脚本，没有生成的安装包。
-- `driver/`：驱动适配源码、许可和依赖说明；`signed-upstream/` 包含用于安装器的未修改 FxSound 已签名驱动输入。
+| 目录 | 内容 |
+| --- | --- |
+| `source/` | Windows 桌面界面、独立核心、硬件监测、HID、音频、场景、手机连接服务及测试/构建脚本 |
+| `app/assets/` | 桌面应用资源 |
+| `app/phone-web/` | 手机浏览器端页面 |
+| `app/sensors/` | 监测配置与相关依赖说明 |
+| `mobile/android/` | Android 原生应用源码、资源和构建脚本 |
+| `installer/` | Windows 安装器源码及相关脚本 |
+| `driver/` | 驱动适配源码、第三方驱动输入与许可说明 |
 
-## 当前行为
+## 从源码构建
 
-桌面 EQ 默认 10 段，设置页支持 1–12 段；10 段默认频率与调频范围依据 FxSound 原版。EQ 设置为独立页面。音频线程的设备扫描已移出实时处理路径，关闭桌面应用时核心和 EQ 一起停止并恢复路由。现有用户配置兼容保留。
+### Windows 桌面端
 
-手机端目前是 Android 0.4.0 原生项目；手机网页资源和桌面 HTTPS 配对服务也一并包含。手机端处理的是电脑音频配置，不处理手机本地音频。连接、安全、功能和实机测试范围见 [手机端说明](mobile/README.md)。未包含 iOS 项目或已验证的 iOS 安装包。
+准备 Windows 11 x64、Visual Studio C++ Build Tools、Windows SDK 和 .NET Framework 开发组件，然后在 PowerShell 中运行：
 
-## 桌面构建
+```powershell
+.\source\fetch-dependencies.ps1
+.\source\build.ps1
+```
 
-1. 安装 Visual Studio C++ Build Tools、Windows SDK 与 .NET Framework 开发组件。
-2. 执行 `source/fetch-dependencies.ps1`，取得脚本中锁定并校验的 LibreHardwareMonitor 依赖。
-3. 执行 `source/build.ps1`。NuGet 会恢复项目中锁定版本的 WinUI、C++/WinRT、WebView2 依赖。MSBuild 应使用 x64 工具架构。
-4. 执行生成的 `app/Hhub.Core.exe --self-test report.txt` 运行核心自检。
+构建会使用项目锁定的依赖版本；MSBuild 应使用 x64 工具架构。构建完成后，可通过核心自检检查部分基础功能：
 
-第三方运行库和构建输出没有放入仓库。构建安装器还需要官方 PawnIO 安装程序，放入 `driver/pawnio/PawnIO_setup.exe`；下载与许可见该目录说明。自有驱动开发构建需要 WDK 和独立签名条件，不能把未签名开发输出作为正式驱动。
+```powershell
+.\app\Hhub.Core.exe --self-test report.txt
+```
 
-## Android 构建
+安装器、PawnIO 和驱动开发还存在额外依赖、许可及签名要求，请参阅 `installer/` 与 `driver/` 中的说明。未签名的开发驱动不应作为正式驱动发布。
 
-Android 构建方法、锁定工具和第三方依赖见 [mobile/android](mobile/android/) 及 [手机端说明](mobile/README.md)。从源码运行 `fetch-dependencies.ps1`、`build.ps1`；APK 和开发签名密钥需在本地生成，不上传个人发布密钥。
+### Android 客户端
 
-## 许可与验证范围
+Android 客户端位于 [`mobile/android/`](mobile/android/)，使用 Java 开发。依照该目录说明配置 Android 构建环境，并执行其依赖获取与构建脚本。
 
-保留各文件和第三方目录中的原始许可。FxSound 派生 EQ 为 AGPL-3.0-or-later，许可及改动记录见 `source/vendor/fxsound/`；LibreHardwareMonitor 为 MPL-2.0；PawnIO 和驱动遵循各自许可。根目录 LICENSE 为 FxSound 集成所需 AGPL 许可文本，各组件的原始声明继续有效。
+连接方式、授权机制、支持功能及已知限制请参阅 [手机端说明](mobile/README.md)。目前不包含 iOS 项目。
 
-核心自检与本机试听、硬件实测是不同的验证范围。EV63 等外设的协议与模拟测试不能替代全部真机验证，详见各模块说明。最近 EQ 修复已由用户实际试听确认。
+## 兼容性与验证
 
-本次仅整理源码，未发行新的安装包。没有沿用已删除发行版的下载链接或旧更新清单，也不包含个人配置、授权令牌、配对秘密、诊断录音和编译缓存。
+外设参数读写需要对应型号的协议插件支持；模拟测试、核心自检和实际硬件验证不等价。手机功能也可能受到 Android 版本、局域网连接和电脑授权状态的影响。
+
+项目中的功能和代码不代表所有设备均已通过实机测试。使用前请查阅相关模块说明，并自行确认目标设备的兼容性。
+
+## 开源许可
+
+本仓库包含采用不同许可证的代码与第三方组件，请保留各目录中的原始版权及许可声明：
+
+- **FxSound 派生 EQ**：AGPL-3.0-or-later；许可及修改记录参阅 `source/vendor/fxsound/`。
+- **LibreHardwareMonitor**：MPL-2.0。
+- **PawnIO 及相关驱动**：遵循各自适用的许可条款。
+
+根目录 [`LICENSE`](LICENSE) 提供项目集成 FxSound 所需的 AGPL 许可文本；其他组件仍遵循其各自的许可证。
