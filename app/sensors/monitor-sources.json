@@ -1,0 +1,4 @@
+{
+  "backend": "librehardwaremonitor",
+  "supplements": ["windows-storage"]
+}

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="700" height="420" viewBox="0 0 700 420">
+ <defs><linearGradient id="body" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#75797e"/><stop offset=".45" stop-color="#383b40"/><stop offset="1" stop-color="#181a1e"/></linearGradient><linearGradient id="button" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#91969c"/><stop offset="1" stop-color="#32353a"/></linearGradient></defs>
+ <ellipse cx="370" cy="346" rx="216" ry="19" fill="#777" opacity=".12"/>
+ <path d="M134 286C119 247 145 177 207 129C255 91 323 71 371 87C438 111 536 169 555 241C581 334 457 353 371 352C283 351 176 335 134 286Z" fill="url(#body)" stroke="#25272b" stroke-width="3"/>
+ <path d="M150 232C169 172 234 128 307 107L348 166L306 221C246 226 196 230 150 249Z" fill="url(#button)" stroke="#2a2d32" stroke-width="2"/>
+ <path d="M313 106C353 84 379 93 420 118L402 190L350 167Z" fill="url(#button)" stroke="#292c31" stroke-width="2"/>
+ <path d="M305 219L350 167L401 189" stroke="#16181c" stroke-width="5" fill="none"/>
+ <rect x="320" y="136" width="33" height="42" rx="13" fill="#111317" transform="rotate(-28 336 156)"/>
+ <path d="M330 138L343 166M324 144L338 172" stroke="#575b61" stroke-width="2"/>
+ <path d="M181 258C210 249 231 245 261 246L257 262C232 266 210 270 184 278Z" fill="#15171b" stroke="#62666c" stroke-width="2"/>
+ <path d="M274 245L308 239L303 256L270 263Z" fill="#16181c" stroke="#5d6268" stroke-width="2"/>
+ <path d="M175 299C250 332 378 351 477 315" stroke="#71767c" stroke-width="2" opacity=".25" fill="none"/>
+</svg>
