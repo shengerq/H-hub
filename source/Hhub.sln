@@ -1,0 +1,34 @@
+
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Hhub", "Hhub.vcxproj", "{70C16F4A-6188-4836-94F9-740B32F821F0}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Hhub.Core", "Hhub.Core.vcxproj", "{85839E09-B2B8-44A6-AF2A-CE723A5EE2DB}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Hhub.Windows", "Hhub.Windows.vcxproj", "{EA9F4094-E8C3-4A25-9192-A2F0FC33B91B}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Hhub.AudioTest", "Hhub.AudioTest.vcxproj", "{E2FAF9D3-C579-4518-8BE1-E2869927DDE3}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{70C16F4A-6188-4836-94F9-740B32F821F0}.Release|x64.ActiveCfg = Release|x64
+		{70C16F4A-6188-4836-94F9-740B32F821F0}.Release|x64.Build.0 = Release|x64
+		{85839E09-B2B8-44A6-AF2A-CE723A5EE2DB}.Release|x64.ActiveCfg = Release|x64
+		{85839E09-B2B8-44A6-AF2A-CE723A5EE2DB}.Release|x64.Build.0 = Release|x64
+		{EA9F4094-E8C3-4A25-9192-A2F0FC33B91B}.Release|x64.ActiveCfg = Release|x64
+		{EA9F4094-E8C3-4A25-9192-A2F0FC33B91B}.Release|x64.Build.0 = Release|x64
+		{E2FAF9D3-C579-4518-8BE1-E2869927DDE3}.Release|x64.ActiveCfg = Release|x64
+		{E2FAF9D3-C579-4518-8BE1-E2869927DDE3}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {A1B2C3D4-E5F6-4A7B-8C9D-0E1F2A3B4C5D}
+	EndGlobalSection
+EndGlobal

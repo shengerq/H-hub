@@ -1,0 +1,66 @@
+# ---- 构建产物 ----
+[Bb]in/
+[Oo]bj/
+x64/
+x86/
+ARM64/
+Debug/
+Release/
+Generated Files/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.VC.db
+*.VC.VC.opendb
+*.opendb
+.vs/
+
+# ---- C++ 中间/输出文件 ----
+*.obj
+*.pdb
+*.ilk
+*.idb
+*.exp
+*.lib
+*.tlog
+*.lastbuildstate
+*.iobj
+*.ipdb
+*.log
+*.pch
+*.res
+*.resources
+*.aps
+
+# ---- C# 中间/输出（传感器/服务用 csc 直接编译，产物在 app/ 下）----
+*.dll.config
+*.cache
+
+# ---- NuGet ----
+packages/
+*.nupkg
+*.nuget.g.props
+*.nuget.g.targets
+project.lock.json
+project.assets.json
+
+# ---- 安装器产物 ----
+release/
+Output/
+installer/*.exe
+
+# ---- 编辑器/系统 ----
+.idea/
+.vscode/
+*.swp
+*~
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# ---- 临时文件 ----
+*.tmp
+*.bak
+*.orig
+*.rej
