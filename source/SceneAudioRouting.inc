@@ -1,0 +1,15 @@
+﻿// Included inside EqAudio. Scene-owned application routes are transient;
+// independent background bindings always take precedence and are not rewritten.
+std::map<std::wstring,std::wstring> sceneAudioOwned;
+void syncSceneAudio(JsonObject state){
+ std::map<std::wstring,JsonObject> desired;auto runtime=state.GetNamedObject(L"eqRuntime",JsonObject{});bool available=flag(state.GetNamedObject(L"settings"),L"eqEnabled",true)&&flag(runtime,L"driverReady")&&flag(runtime,L"routingAvailable");
+ auto scene=find(state.GetNamedArray(L"scenes"),str(state,L"currentScene"));auto plugin=find(state.GetNamedArray(L"plugins"),L"eq");available=available&&flag(plugin,L"installed")&&str(plugin,L"mode")!=L"disabled"&&str(plugin,L"mode")!=L"manual";
+ if(available){for(auto const& v:scene.GetNamedArray(L"bindings",JsonArray{})){auto binding=v.GetObject();try{auto p=find(state.GetNamedArray(L"deviceProfiles"),str(binding,L"profile"));if(str(p,L"kind")!=L"audio"||str(p,L"provider")!=L"generic"||!p.HasKey(L"payload"))continue;
+ auto sources=runtime.GetNamedArray(L"sources",JsonArray{});if(!sources.Size()||str(p,L"output").empty())continue;
+ for(auto const& value:scene.GetNamedArray(L"apps",JsonArray{})){auto app=eqAppId(std::wstring(value.GetString()));bool background=false;for(auto const& saved:state.GetNamedArray(L"eqRealPrefs",JsonArray{})){auto c=saved.GetObject();if(str(c,L"app")==app&&flag(c,L"backgroundAutoStart"))background=true;}if(background)continue;
+ auto c=object(std::wstring(p.GetNamedObject(L"payload").Stringify()));put(c,L"app",app);put(c,L"output",str(p,L"output"));put(c,L"source",str(sources.GetObjectAt(0),L"id"));put(c,L"preamp",0.0);put(c,L"autoPreamp",true);put(c,L"enabled",true);put(c,L"sceneProfile",str(p,L"id"));desired[app]=c;
+ }}catch(...) {}}}
+ for(auto it=sceneAudioOwned.begin();it!=sceneAudioOwned.end();){if(!desired.count(it->first)){auto found=streams.find(it->first);if(found!=streams.end()){auto info=found->second->snapshot();if(str(info,L"sceneProfile")==it->second)stop(it->first);}it=sceneAudioOwned.erase(it);}else ++it;}
+ for(auto const& [app,c]:desired){auto found=streams.find(app);bool changed=found==streams.end();if(!changed){auto info=found->second->snapshot();changed=str(info,L"sceneProfile")!=str(c,L"sceneProfile")||str(info,L"configuration")!=std::wstring(c.Stringify());}if(changed)try{start(c);sceneAudioOwned[app]=str(c,L"sceneProfile");}catch(...) {}}
+ for(auto const& v:state.GetNamedArray(L"profileRuntime",JsonArray{})){auto item=v.GetObject();try{auto p=find(state.GetNamedArray(L"deviceProfiles"),str(item,L"profile"));if(str(p,L"provider")!=L"generic")continue;bool all=true,any=false;for(auto const& [app,c]:desired)if(str(c,L"sceneProfile")==str(p,L"id")){any=true;auto stream=streams.find(app);if(stream==streams.end()){all=false;continue;}auto info=stream->second->snapshot();if(!flag(info,L"acknowledged")||num(info,L"frames")<=0||!str(info,L"error").empty())all=false;}put(item,L"state",any&&all?std::wstring(L"confirmed"):std::wstring(L"waitingAudio"));}catch(...) {}}
+}

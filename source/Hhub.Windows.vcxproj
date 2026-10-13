@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+ <ItemGroup Label="ProjectConfigurations"><ProjectConfiguration Include="Release|x64"><Configuration>Release</Configuration><Platform>x64</Platform></ProjectConfiguration></ItemGroup>
+ <PropertyGroup Label="Globals"><ProjectGuid>{EA9F4094-E8C3-4A25-9192-A2F0FC33B91B}</ProjectGuid><Keyword>Win32Proj</Keyword><BaseIntermediateOutputPath>$(ProjectDir)obj\windowsworker\</BaseIntermediateOutputPath><MSBuildProjectExtensionsPath>$(ProjectDir)obj\windowsworker\</MSBuildProjectExtensionsPath><NuGetTargetMoniker>native,Version=v0.0</NuGetTargetMoniker><WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion></PropertyGroup>
+ <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+ <PropertyGroup Label="Configuration"><ConfigurationType>Application</ConfigurationType><UseDebugLibraries>false</UseDebugLibraries><PlatformToolset>v143</PlatformToolset><CharacterSet>Unicode</CharacterSet></PropertyGroup>
+ <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+ <PropertyGroup><OutDir>$(ProjectDir)..\app\</OutDir><IntDir>$(ProjectDir)..\build\windowsworker\</IntDir><TargetName>Hhub.Windows</TargetName></PropertyGroup>
+ <ItemDefinitionGroup><ClCompile><LanguageStandard>stdcpp20</LanguageStandard><ExceptionHandling>Sync</ExceptionHandling><RuntimeLibrary>MultiThreaded</RuntimeLibrary><AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions><PreprocessorDefinitions>UNICODE;_UNICODE;NOMINMAX;WIN32_LEAN_AND_MEAN;%(PreprocessorDefinitions)</PreprocessorDefinitions></ClCompile><Link><SubSystem>Windows</SubSystem><AdditionalDependencies>windowsapp.lib;advapi32.lib;psapi.lib;shell32.lib;ole32.lib;uuid.lib;%(AdditionalDependencies)</AdditionalDependencies></Link></ItemDefinitionGroup>
+ <ItemGroup><ClCompile Include="WindowsWorker.cpp" /></ItemGroup>
+ <ItemGroup><ResourceCompile Include="Version.rc" /></ItemGroup>
+ <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+</Project>

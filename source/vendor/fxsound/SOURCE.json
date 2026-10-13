@@ -1,0 +1,15 @@
+{
+  "repository": "https://github.com/fxsound2/fxsound-app",
+  "commit": "d8e7a23d37ed5939c2a3090a1c1756c7f2500b17",
+  "license": "AGPL-3.0-or-later",
+  "retrievedDate": "2026-10-12",
+  "copiedAlgorithms": [
+    "filtCalcParametric",
+    "filtBW2ANGLE"
+  ],
+  "processingReference": "dsp/ptutil/SOS/SosProcess.cpp",
+  "sourceSHA256": "efc29b39a4acf8969081d40886d1a87ea02ad1e2956025aa22b940a03ab96ee6",
+  "adaptation": "Double precision EQ adapter plus original Fidelity, Ambience, Surround, Dynamic Boost and Bass DSP; per-instance settings replace registry access; no FxSound UI or driver bundled",
+  "factoryPresetSource": "Installer/Resources/Factsoft/*.fac",
+  "factoryPresetAdaptation": "Ten original EQ bands preserved with two neutral endpoint bands; all five original enhancement values and enable flags preserved"
+}
