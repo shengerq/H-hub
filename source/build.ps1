@@ -1,4 +1,4 @@
-﻿param([string]$Configuration = 'Release',[string]$OutputDirectory)
+param([string]$Configuration = 'Release',[string]$OutputDirectory)
 $ErrorActionPreference = 'Stop'
 $taskOriginalApp=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../app'))
 $taskAppDir=if($OutputDirectory){[IO.Path]::GetFullPath($OutputDirectory)}else{$taskOriginalApp}
@@ -16,7 +16,7 @@ $taskUpdateExe=Join-Path $taskAppDir 'Hhub.Update.exe'
 & $taskCsc /nologo /target:exe /platform:x64 /optimize+ ("/out:"+$taskUpdateExe) /reference:System.Web.Extensions.dll (Join-Path $PSScriptRoot 'UpdateService.cs')
 if($LASTEXITCODE -ne 0){throw '更新服务构建失败'}
 $taskCatalogExe=Join-Path $taskAppDir 'Hhub.Catalog.exe'
-& $taskCsc /nologo /target:exe /platform:x64 /optimize+ ("/out:"+$taskCatalogExe) /reference:System.Web.Extensions.dll (Join-Path $PSScriptRoot 'PluginCatalog.cs')
+& $taskCsc /nologo /target:exe /platform:x64 /optimize+ ("/out:"+$taskCatalogExe) /reference:System.Web.Extensions.dll (Join-Path $PSScriptRoot 'PluginCatalog.cs') (Join-Path $PSScriptRoot 'PluginContract.cs') /main:PluginCatalog
 if($LASTEXITCODE -ne 0){throw 'Plugin catalog build failed'}
 $taskVswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio\Installer\vswhere.exe'
 if (-not (Test-Path -LiteralPath $taskVswhere)) { throw '请先安装 Visual Studio C++ Build Tools 与 Windows SDK。' }

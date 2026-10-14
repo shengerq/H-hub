@@ -1,0 +1,12 @@
+name: Validate plugin device contract
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  contract:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test precise matching and verification
+        shell: pwsh
+        run: ./source/test-plugin-contract.ps1
