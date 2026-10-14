@@ -10,5 +10,9 @@
  <ItemGroup><PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3179.45" /><PackageReference Include="Microsoft.Windows.CppWinRT" Version="3.0.260818.1" /><PackageReference Include="Microsoft.WindowsAppSDK" Version="1.8.260921001" /></ItemGroup>
  <ItemGroup><ClCompile Include="App.cpp" /><ClCompile Include="vendor\qrcodegen.cpp" /><ClInclude Include="Common.h" /><ClInclude Include="Model.h" /></ItemGroup>
  <ItemGroup><ResourceCompile Include="Version.rc" /></ItemGroup>
+ <ItemGroup><HomeWebAssets Include="$(ProjectDir)webui\**\*" /></ItemGroup>
+ <Target Name="CopyHomeWebAssets" AfterTargets="Build">
+  <Copy SourceFiles="@(HomeWebAssets)" DestinationFiles="@(HomeWebAssets->'$(OutDir)webui\%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+ </Target>
  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

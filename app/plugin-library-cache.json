@@ -1,0 +1,37 @@
+{
+    "schemaVersion":  1,
+    "name":  "H hub插件库",
+    "plugins":  [
+                    {
+                        "packageUrl":  "Hhub-Rapoo-VT3S-MAX-0.5.1.hhub",
+                        "id":  "hhub.rapoo-vt3s-max",
+                        "kind":  "mouse",
+                        "version":  "0.5.1",
+                        "description":  "雷柏 VT3S MAX：七档 DPI、改键、参数自动同步及电量上报。固件刷写尚未开放。",
+                        "author":  "H hub",
+                        "name":  "雷柏 VT3S MAX",
+                        "sha256":  "ef344e6531704ec23ffd32e5d75cd61a366119fcef2cbfe596aa0638d2344055",
+                        "tags":  [
+                                     "鼠标",
+                                     "雷柏",
+                                     "VT3S MAX"
+                                 ]
+                    },
+                    {
+                        "packageUrl":  "Hhub-Developer-Tools-0.5.1.hhub",
+                        "id":  "hhub.developer-tools",
+                        "kind":  "developer-tools",
+                        "version":  "0.5.1",
+                        "description":  "鼠标、键盘、音频及手柄插件开发工作台，独立安装。",
+                        "author":  "H hub",
+                        "name":  "H hub 开发者工具",
+                        "sha256":  "3ebf639b8b1a7adc92df4b0b5065d532c9025fce928f2739515805f3c5574505",
+                        "tags":  [
+                                     "开发者",
+                                     "插件开发",
+                                     "外设"
+                                 ]
+                    }
+                ],
+    "indexUrl":  ""
+}

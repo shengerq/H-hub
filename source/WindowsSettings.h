@@ -102,7 +102,7 @@ struct WindowsSettings {
   auto path=preferencePath(value);HKEY key{};auto status=RegCreateKeyExW(preferenceRoot(value),path.c_str(),0,nullptr,0,KEY_SET_VALUE,nullptr,&key,nullptr);
   if(status!=ERROR_SUCCESS)throw hresult_error(HRESULT_FROM_WIN32(status));
   if(flag(stored,L"present")){auto bytes=preferenceBytes(stored);status=RegSetValueExW(key,value.name.c_str(),0,(DWORD)num(stored,L"type"),bytes.data(),(DWORD)bytes.size());}
-  else status=RegDeleteValueW(key,value.name.c_str());RegCloseKey(key);
+  else status=RegDeleteValueW(key,value.name.c_str());if(status==ERROR_SUCCESS)status=RegFlushKey(key);RegCloseKey(key);
   if(status!=ERROR_SUCCESS&&status!=ERROR_FILE_NOT_FOUND)throw hresult_error(HRESULT_FROM_WIN32(status));
  }
  static JsonObject storedValue(DWORD type,void const* data,size_t bytes){JsonObject result;put(result,L"present",true);put(result,L"type",(double)type);JsonArray buffer;auto source=(BYTE const*)data;for(size_t i=0;i<bytes;i++)buffer.Append(JsonValue::CreateNumberValue(source[i]));result.SetNamedValue(L"data",buffer);return result;}
@@ -157,7 +157,7 @@ struct WindowsSettings {
  static DWORD hotkeyFlags(DWORD original,DWORD mask,bool enabled){return enabled?original|mask:original&~mask;}
  void writeOption(std::wstring const& id,JsonObject const& desired){if(id==L"systemSound"){setSound(desired);return;}if(id==L"hdr"){setHdr(desired);return;}if(!preferenceValues(id).empty()){writePreference(id,desired);return;}auto e=entry(id);
   if(!e.path.empty()){if(!flag(desired,L"present",true)){HKEY key{};auto status=RegOpenKeyExW(HKEY_CURRENT_USER,regPath(e).c_str(),0,KEY_SET_VALUE,&key);if(status==ERROR_FILE_NOT_FOUND)return;if(status!=ERROR_SUCCESS)throw hresult_error(HRESULT_FROM_WIN32(status));status=RegDeleteValueW(key,e.value.c_str());RegCloseKey(key);if(status!=ERROR_SUCCESS&&status!=ERROR_FILE_NOT_FOUND)throw hresult_error(HRESULT_FROM_WIN32(status));return;}
-   HKEY key{};auto status=RegCreateKeyExW(HKEY_CURRENT_USER,regPath(e).c_str(),0,nullptr,0,KEY_SET_VALUE,nullptr,&key,nullptr);if(status!=ERROR_SUCCESS)throw hresult_error(HRESULT_FROM_WIN32(status));DWORD value=flag(desired,L"enabled")?1:0;status=RegSetValueExW(key,e.value.c_str(),0,REG_DWORD,(BYTE*)&value,sizeof(value));RegCloseKey(key);if(status!=ERROR_SUCCESS)throw hresult_error(HRESULT_FROM_WIN32(status));return;
+   HKEY key{};auto status=RegCreateKeyExW(HKEY_CURRENT_USER,regPath(e).c_str(),0,nullptr,0,KEY_SET_VALUE,nullptr,&key,nullptr);if(status!=ERROR_SUCCESS)throw hresult_error(HRESULT_FROM_WIN32(status));DWORD value=flag(desired,L"enabled")?1:0;status=RegSetValueExW(key,e.value.c_str(),0,REG_DWORD,(BYTE*)&value,sizeof(value));if(status==ERROR_SUCCESS)status=RegFlushKey(key);RegCloseKey(key);if(status!=ERROR_SUCCESS)throw hresult_error(HRESULT_FROM_WIN32(status));return;
   }
   bool enabled=flag(desired,L"enabled");BOOL ok=FALSE;UINT save=SPIF_UPDATEINIFILE|SPIF_SENDCHANGE;
   if(id==L"mousePrecision"){int values[3]{};if(!spi(SPI_GETMOUSE,0,values,0))throw hresult_error(E_FAIL,L"读取鼠标参数失败");auto previous=desired.GetNamedArray(L"mouse",JsonArray{});values[2]=previous.Size()==3?(int)previous.GetNumberAt(2):enabled?1:0;ok=spi(SPI_SETMOUSE,0,values,save);}

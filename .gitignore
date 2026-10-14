@@ -64,3 +64,22 @@ desktop.ini
 *.bak
 *.orig
 *.rej
+
+# Local desktop build outputs and restored runtime dependencies
+build/
+source/obj/
+app/*.dll
+app/*.exe
+app/*.winmd
+app/*.pri
+app/*.lib
+app/WindowsAppRuntime.png
+app/workloads*.json
+app/*/
+!app/assets/
+!app/phone-web/
+!app/sensors/
+app/sensors/*.dll
+app/sensors/*.exe
+app/sensors/*.zip
+driver/pawnio/PawnIO_setup.exe
