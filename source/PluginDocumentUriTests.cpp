@@ -1,0 +1,3 @@
+#include "PluginDocumentUri.h"
+#include <iostream>
+int main(){winrt::init_apartment();auto value=hub::pluginDocumentUrl(L"C:/Users/Administrator/Desktop/新建文件夹/openmouse-device-lab/data/HhubMousePerDeviceTests/plugin-ui/device-plugin.html");auto expected=L"file:///C:/Users/Administrator/Desktop/%E6%96%B0%E5%BB%BA%E6%96%87%E4%BB%B6%E5%A4%B9/openmouse-device-lab/data/HhubMousePerDeviceTests/plugin-ui/device-plugin.html";if(value!=expected)return 1;auto special=hub::pluginDocumentUrl(L"C:/folder with space/a#b%20.html");if(special!=L"file:///C:/folder%20with%20space/a%23b%2520.html")return 2;std::cout<<"PASS actual Chromium navigation URL equals allowed URL; spaces, hash and percent preserved\n";}

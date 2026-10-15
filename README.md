@@ -82,3 +82,7 @@ Android 客户端位于 [`mobile/android/`](mobile/android/)，使用 Java 开�
 - **PawnIO 及相关驱动**：遵循各自适用的许可条款。
 
 根目录 [`LICENSE`](LICENSE) 提供项目集成 FxSound 所需的 AGPL 许可文本；其他组件仍遵循其各自的许可证。
+
+## 正式插件与虚拟鼠标
+
+[虚拟鼠标启动与验证说明](docs/虚拟鼠标.md)：隔离配置提供 VAXEE 与 MCHOSE 软件设备，直接使用插件库中的正式物理协议包。插件目录支持品牌子目录和最多 8192 个条目；本地页面路径按 UTF-8 编码，避免中文目录被 WebView2 误拦截。实机验证：没有。

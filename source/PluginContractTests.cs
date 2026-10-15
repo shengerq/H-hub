@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Web.Script.Serialization;
 internal static class PluginContractTests {
@@ -25,6 +25,8 @@ internal static class PluginContractTests {
   Reject(()=>PluginContract.Classify(Parse("{\"group\":\"application\"}")));
   grouped=Entry();grouped["group"]="application";grouped["category"]="testing";Reject(()=>PluginContract.Classify(grouped));
   var classifiedEntry=Entry();string oldCode=(string)classifiedEntry["identityCode"];PluginContract.Classify(classifiedEntry);Require(oldCode==PluginContract.Code(classifiedEntry));
+  var root=System.IO.Path.GetTempPath();Require(PluginContract.PackagePath(root,"catalog/peripherals/mouse/VAXEE/XE__Vaxee.hhub").StartsWith(System.IO.Path.GetFullPath(root)));foreach(var bad in new[]{"../bad.hhub","/root.hhub","a/../bad.hhub","a//b.hhub","C:/bad.hhub","a/%2e%2e/b.hhub","a\\b.hhub","a.hhub?q"})Reject(()=>PluginContract.PackagePath(root,bad));
+  Console.WriteLine("PASS safe nested package paths and traversal rejection");
   Console.WriteLine("PASS peripheral/application classification, legacy audio/tools, invalid categories and identity preservation");
   Console.WriteLine("PASS exact matching, missing firmware, tampering, stale evidence, UI mismatch, legacy and verification evidence");return 0;
  }catch(Exception ex){Console.Error.WriteLine(ex);return 1;}}

@@ -1,6 +1,7 @@
-#include <wincodec.h>
+﻿#include <wincodec.h>
 #pragma comment(lib,"windowscodecs.lib")
 #include "Common.h"
+#include "PluginDocumentUri.h"
 #include "PluginPackage.h"
 #include <winrt/Windows.ApplicationModel.DataTransfer.h>
 #include <winrt/Windows.Storage.h>

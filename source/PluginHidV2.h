@@ -3,11 +3,13 @@
 #include <map>
 #include <set>
 #include <memory>
+#include "VirtualMouse.h"
 
 namespace hub {
 // Native bridge for reviewed offline WebHID protocol adapters.
 // Enumeration tokens belong to one plugin; pages never supply Windows device paths.
 struct PluginHidV2 {
+ VirtualMouse virtualMouse;
  struct Device {
   std::wstring path;JsonObject info,policy;HIDP_CAPS caps{};HANDLE handle=INVALID_HANDLE_VALUE,event{};
   OVERLAPPED read{};std::vector<unsigned char> bytes;bool reading=false;ULONGLONG touched=GetTickCount64();
@@ -51,7 +53,7 @@ struct PluginHidV2 {
  void revoke(JsonObject state){for(auto it=batterySamples.begin();it!=batterySamples.end();){bool keep=false;for(auto const& value:state.GetNamedArray(L"plugins")){auto p=value.GetObject();if(str(p,L"id")==str(it->second,L"pluginId")&&flag(p,L"installed")&&str(p,L"mode")!=L"disabled")keep=true;}if(!keep||clockSeconds()-num(it->second,L"sampleTime")>60)it=batterySamples.erase(it);else ++it;}for(auto it=sessions.begin();it!=sessions.end();){bool keep=false;for(auto const& value:state.GetNamedArray(L"plugins")){auto p=value.GetObject();if(str(p,L"id")==it->first&&flag(p,L"installed")&&str(p,L"mode")!=L"disabled")keep=true;}if(!keep)it=sessions.erase(it);else ++it;}}
  JsonObject transact(JsonObject state,JsonObject body){
   auto id=str(body,L"id");auto plugin=find(state.GetNamedArray(L"plugins"),id);if(!flag(plugin,L"installed")||str(plugin,L"mode")==L"disabled")throw hresult_error(E_ACCESSDENIED,L"插件未安装或已禁用");bool allowed=false;for(auto const& permission:plugin.GetNamedArray(L"permissions",JsonArray{}))if(permission.GetString()==L"USB HID 配置")allowed=true;if(!allowed)throw hresult_error(E_ACCESSDENIED,L"插件没有 HID 配置权限");
-  auto request=body.GetNamedObject(L"request");auto op=str(request,L"operation");JsonObject result;put(result,L"transportVersion",2.0);if(op==L"closeAll"){sessions.erase(id);return result;}if(op==L"enumerate")return enumerate(id,plugin);
+  auto request=body.GetNamedObject(L"request");if(VirtualMouse::enabled())return virtualMouse.transact(id,plugin,request,matches);auto op=str(request,L"operation");JsonObject result;put(result,L"transportVersion",2.0);if(op==L"closeAll"){sessions.erase(id);return result;}if(op==L"enumerate")return enumerate(id,plugin);
   auto owner=sessions.find(id);if(owner==sessions.end())throw hresult_error(E_ACCESSDENIED,L"请先枚举并选择设备");auto found=owner->second.find(str(request,L"key"));if(found==owner->second.end())throw hresult_error(E_ACCESSDENIED,L"设备令牌不属于此插件");auto& device=*found->second;
   if(op==L"close"){device.close();return result;}
   if(op==L"open"){device.close();device.handle=CreateFileW(device.path.c_str(),GENERIC_READ|GENERIC_WRITE,FILE_SHARE_READ|FILE_SHARE_WRITE,nullptr,OPEN_EXISTING,FILE_FLAG_OVERLAPPED,nullptr);bool inputAvailable=device.handle!=INVALID_HANDLE_VALUE;if(device.handle==INVALID_HANDLE_VALUE&&device.caps.FeatureReportByteLength>0)device.handle=CreateFileW(device.path.c_str(),0,FILE_SHARE_READ|FILE_SHARE_WRITE,nullptr,OPEN_EXISTING,FILE_FLAG_OVERLAPPED,nullptr);if(device.handle==INVALID_HANDLE_VALUE)throw hresult_error(HRESULT_FROM_WIN32(GetLastError()),L"HID 通道无法打开，请退出原厂驱动");put(result,L"inputAvailable",inputAvailable);if(inputAvailable&&device.caps.InputReportByteLength>0&&device.caps.InputReportByteLength<=4097){device.event=CreateEventW(nullptr,TRUE,FALSE,nullptr);if(!device.event)throw hresult_error(HRESULT_FROM_WIN32(GetLastError()));device.beginRead();}return result;}

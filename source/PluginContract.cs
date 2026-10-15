@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Text;
 using System.Linq;
@@ -60,7 +60,12 @@ internal static class PluginContract {
   return S(c,"scope")=="device"&&S(c,"deviceName")==S(device,"deviceName")&&S(c,"hardwareId")==S(device,"hardwareId").ToUpperInvariant()&&!String.IsNullOrWhiteSpace(S(device,"firmwareVersion"))&&A(c,"firmwareVersions").Contains(S(device,"firmwareVersion"));
  }
  public static void VerifyManifest(Dictionary<string,object> entry,Dictionary<string,object> manifest){if(entry.ContainsKey("compatibility")&&Canonical(O(entry,"compatibility"))!=Canonical(O(manifest,"compatibility")))throw new Exception("插件包设备契约与清单不匹配");}
+ public static string PackagePath(string root,string file){
+  if(String.IsNullOrEmpty(file)||!file.EndsWith(".hhub",StringComparison.Ordinal)||file.IndexOfAny(new[]{'\\',':','%','?','#'})>=0||file.Split('/').Any(x=>x.Length==0||x=="."||x==".."))throw new Exception("包路径必须是安全的相对 .hhub 路径");
+  string prefix=Path.GetFullPath(root).TrimEnd(Path.DirectorySeparatorChar)+Path.DirectorySeparatorChar;
+  string full=Path.GetFullPath(Path.Combine(prefix,file));if(!full.StartsWith(prefix,StringComparison.OrdinalIgnoreCase))throw new Exception("包路径越界");return full;
+ }
  public static int Main(string[] args){
-  try{if(args.Length!=1)throw new Exception("Usage: PluginContract.exe index.json");var json=new JavaScriptSerializer{MaxJsonLength=32*1024*1024};var feed=(Dictionary<string,object>)json.DeserializeObject(File.ReadAllText(args[0],Encoding.UTF8));var codes=new HashSet<string>();foreach(var item in A(feed,"plugins")){var e=(Dictionary<string,object>)item;Validate(e,feed);if(e.ContainsKey("compatibility")&&!codes.Add(S(e,"identityCode")))throw new Exception("重复插件编码");string file=S(e,"packageUrl");if(Path.GetFileName(file)!=file||!file.EndsWith(".hhub",StringComparison.Ordinal))throw new Exception("包路径必须是根目录 .hhub 文件");byte[] bytes=File.ReadAllBytes(Path.Combine(Path.GetDirectoryName(Path.GetFullPath(args[0])),file));string hash;using(var sha=SHA256.Create())hash=BitConverter.ToString(sha.ComputeHash(bytes)).Replace("-","").ToLowerInvariant();if(hash!=S(e,"sha256"))throw new Exception("包摘要不匹配");var p=(Dictionary<string,object>)json.DeserializeObject(Encoding.UTF8.GetString(bytes));foreach(string key in new[]{"id","name","author","version"})if(S(e,key)!=S(p,key))throw new Exception("包身份不匹配："+key);VerifyManifest(e,p);Console.WriteLine("PASS "+S(e,"id")+" "+S(e,"identityCode"));}return 0;}catch(Exception e){Console.Error.WriteLine(e.Message);return 1;}
+  try{if(args.Length!=1)throw new Exception("Usage: PluginContract.exe index.json");var json=new JavaScriptSerializer{MaxJsonLength=32*1024*1024};var feed=(Dictionary<string,object>)json.DeserializeObject(File.ReadAllText(args[0],Encoding.UTF8));var codes=new HashSet<string>();foreach(var item in A(feed,"plugins")){var e=(Dictionary<string,object>)item;Validate(e,feed);if(e.ContainsKey("compatibility")&&!codes.Add(S(e,"identityCode")))throw new Exception("重复插件编码");string file=S(e,"packageUrl");byte[] bytes=File.ReadAllBytes(PackagePath(Path.GetDirectoryName(Path.GetFullPath(args[0])),file));string hash;using(var sha=SHA256.Create())hash=BitConverter.ToString(sha.ComputeHash(bytes)).Replace("-","").ToLowerInvariant();if(hash!=S(e,"sha256"))throw new Exception("包摘要不匹配");var p=(Dictionary<string,object>)json.DeserializeObject(Encoding.UTF8.GetString(bytes));foreach(string key in new[]{"id","name","author","version"})if(S(e,key)!=S(p,key))throw new Exception("包身份不匹配："+key);VerifyManifest(e,p);Console.WriteLine("PASS "+S(e,"id")+" "+S(e,"identityCode"));}return 0;}catch(Exception e){Console.Error.WriteLine(e.Message);return 1;}
  }
 }

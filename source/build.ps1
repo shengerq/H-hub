@@ -1,4 +1,4 @@
-param([string]$Configuration = 'Release',[string]$OutputDirectory)
+﻿param([string]$Configuration = 'Release',[string]$OutputDirectory)
 $ErrorActionPreference = 'Stop'
 $taskOriginalApp=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../app'))
 $taskAppDir=if($OutputDirectory){[IO.Path]::GetFullPath($OutputDirectory)}else{$taskOriginalApp}
@@ -20,7 +20,7 @@ $taskCatalogExe=Join-Path $taskAppDir 'Hhub.Catalog.exe'
 if($LASTEXITCODE -ne 0){throw 'Plugin catalog build failed'}
 $taskVswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio\Installer\vswhere.exe'
 if (-not (Test-Path -LiteralPath $taskVswhere)) { throw '请先安装 Visual Studio C++ Build Tools 与 Windows SDK。' }
-$taskMsbuild = & $taskVswhere -latest -products '*' -requires Microsoft.Component.MSBuild -find 'MSBuild\**\Bin\MSBuild.exe' | Select-Object -First 1
+$taskMsbuild = & $taskVswhere -latest -products '*' -requires Microsoft.Component.MSBuild -find 'MSBuild\**\Bin\amd64\MSBuild.exe' | Select-Object -First 1
 if (-not $taskMsbuild) { throw '未找到 MSBuild。' }
 foreach ($taskProject in @('Hhub.Core.vcxproj','Hhub.AudioTest.vcxproj','Hhub.Windows.vcxproj','Hhub.vcxproj')) {
     & $taskMsbuild (Join-Path $PSScriptRoot $taskProject) /restore /m "/p:Configuration=$Configuration" /p:Platform=x64 ("/p:OutDir="+$taskAppDir+[IO.Path]::DirectorySeparatorChar) /verbosity:minimal
