@@ -13,6 +13,21 @@ internal static class PluginContract {
  static object[] A(Dictionary<string,object> o,string key){object v;var a=o.TryGetValue(key,out v)?v as object[]:null;if(a==null)throw new Exception("缺少数组："+key);return a;}
  static bool B(Dictionary<string,object> o,string key){object v;if(!o.TryGetValue(key,out v)||!(v is bool))throw new Exception("需要布尔字段："+key);return (bool)v;}
  static void Exact(string s,string key){if(String.IsNullOrWhiteSpace(s)||s!=s.Trim()||s.Length>256||s.Contains("*")||s.Contains("?")||s.Any(Char.IsControl))throw new Exception("需要明确的设备字段："+key);}
+ // Catalog organization is separate from package kind and device identity.
+ public static void Classify(Dictionary<string,object> entry){
+  string kind=S(entry,"kind"),scope=entry.ContainsKey("compatibility")?S(O(entry,"compatibility"),"scope"):"";
+  bool hardware=new[]{"mouse","keyboard","headset","audio","gamepad"}.Contains(kind)||scope=="device";
+  string group=hardware?"peripheral":"application";
+  string category=hardware?(kind=="audio"?"headset":new[]{"mouse","keyboard","headset","gamepad"}.Contains(kind)?kind:"other"):(kind=="developer-tools"?"testing":"other");
+  if(entry.ContainsKey("group")||entry.ContainsKey("category")){
+   group=S(entry,"group");category=S(entry,"category");
+   if(group!="peripheral"&&group!="application")throw new Exception("插件大类必须是 peripheral 或 application");
+   var allowed=group=="peripheral"?new[]{"mouse","keyboard","headset","gamepad","other"}:new[]{"experimental","testing","other"};
+   if(!allowed.Contains(category))throw new Exception("插件子分类不属于所选大类");
+   if((hardware&&group!="peripheral")||(scope=="tool"&&group!="application"))throw new Exception("插件分类与设备契约不一致");
+  }
+  entry["group"]=group;entry["category"]=category;
+ }
  public static string Canonical(Dictionary<string,object> c){
   object version;if(!c.TryGetValue("version",out version)||!(version is int)|| (int)version!=1)throw new Exception("设备契约版本不支持");
   string scope=S(c,"scope"),name=S(c,"deviceName"),hardware=S(c,"hardwareId");var firmwares=A(c,"firmwareVersions");bool mobile=B(c,"mobileUi");
@@ -26,6 +41,7 @@ internal static class PluginContract {
  static string Pack(IEnumerable<string> fields){var b=new StringBuilder();foreach(string f in fields)b.Append(Encoding.UTF8.GetByteCount(f)).Append(':').Append(f);return b.ToString();}
  public static string Code(Dictionary<string,object> entry){var c=O(entry,"compatibility");string data=Pack(new[]{S(entry,"id"),S(entry,"author"),S(entry,"version"),S(entry,"sha256").ToLowerInvariant(),Canonical(c)});using(var sha=SHA256.Create())return "HHUB1-"+BitConverter.ToString(sha.ComputeHash(Encoding.UTF8.GetBytes(data))).Replace("-","").ToLowerInvariant();}
  public static void Validate(Dictionary<string,object> entry,Dictionary<string,object> feed){
+  Classify(entry);
   if(!entry.ContainsKey("compatibility")){if(entry.ContainsKey("identityCode"))throw new Exception("编码缺少设备契约");entry["verificationStatus"]="unverified";entry["mobileUiVerified"]=false;return;}
   var c=O(entry,"compatibility");string code=Code(entry);if(S(entry,"identityCode")!=code)throw new Exception("插件唯一编码与设备契约或摘要不匹配");
   bool verified=false,mobileVerified=false;object records;

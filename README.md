@@ -60,6 +60,9 @@ Android 客户端位于 [`mobile/android/`](mobile/android/)，使用 Java 开�
 
 ## 插件库与设备匹配
 
+插件库与已安装列表按两大类筛选：**外设插件**（鼠标、键盘、耳机、手柄、其他）和 **应用插件**（实验型应用、测试型应用、其他）。分类字段和作者提交流程见[插件分类规则](https://github.com/shengerq/H-hub-plugins/blob/main/docs/插件分类.md)。
+
+
 官方插件库：[shengerq/H-hub-plugins](https://github.com/shengerq/H-hub-plugins)，主程序默认读取其 main/index.json。设备插件按准确型号、硬件识别码和固件版本匹配同类设备；作者可填写简介。插件列表显示绑定包摘要的唯一编码、实机验收状态和手机 UI 声明/验收状态。编码本身不代表验证通过。规则和第三方提交流程见[设备匹配与验证](https://github.com/shengerq/H-hub-plugins/blob/main/docs/设备匹配与验证.md)。
 
 新增匹配接口为 Hhub.Catalog.exe 的 --match；当前旧 HID 路由仍使用原有声明，固件未知不会在该新接口中获得匹配。发布运行包需重新构建。

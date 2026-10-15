@@ -15,6 +15,17 @@ internal static class PluginContractTests {
   e=Entry();var manifest=Entry();PluginContract.VerifyManifest(e,manifest);((Dictionary<string,object>)manifest["compatibility"])["mobileUi"]=false;Reject(()=>PluginContract.VerifyManifest(e,manifest));
   var legacy=Parse("{\"verificationStatus\":\"verified\",\"mobileUiVerified\":true}");PluginContract.Validate(legacy,empty);Require((string)legacy["verificationStatus"]=="unverified"&&!(bool)legacy["mobileUiVerified"]);Require(!PluginContract.Matches(legacy,device));
   e=Entry();record["identityCode"]=e["identityCode"];record["evidenceUrl"]="http://example.com/report";Reject(()=>PluginContract.Validate(e,feed));record["evidenceUrl"]="https://example.com/report";record["hardwareVerified"]=false;Reject(()=>PluginContract.Validate(e,feed));
+  var grouped=Parse("{\"kind\":\"audio\"}");PluginContract.Classify(grouped);Require((string)grouped["group"]=="peripheral"&&(string)grouped["category"]=="headset");
+  grouped=Parse("{\"kind\":\"developer-tools\"}");PluginContract.Classify(grouped);Require((string)grouped["group"]=="application"&&(string)grouped["category"]=="testing");
+  foreach(var category in new[]{"mouse","keyboard","headset","gamepad","other"}){grouped=Parse("{\"group\":\"peripheral\"}");grouped["category"]=category;PluginContract.Classify(grouped);Require((string)grouped["category"]==category);}
+  foreach(var category in new[]{"experimental","testing","other"}){grouped=Parse("{\"group\":\"application\"}");grouped["category"]=category;PluginContract.Classify(grouped);Require((string)grouped["category"]==category);}
+  Reject(()=>PluginContract.Classify(Parse("{\"group\":\"peripheral\",\"category\":\"testing\"}")));
+  Reject(()=>PluginContract.Classify(Parse("{\"group\":\"application\",\"category\":\"mouse\"}")));
+  Reject(()=>PluginContract.Classify(Parse("{\"group\":\"unknown\",\"category\":\"other\"}")));
+  Reject(()=>PluginContract.Classify(Parse("{\"group\":\"application\"}")));
+  grouped=Entry();grouped["group"]="application";grouped["category"]="testing";Reject(()=>PluginContract.Classify(grouped));
+  var classifiedEntry=Entry();string oldCode=(string)classifiedEntry["identityCode"];PluginContract.Classify(classifiedEntry);Require(oldCode==PluginContract.Code(classifiedEntry));
+  Console.WriteLine("PASS peripheral/application classification, legacy audio/tools, invalid categories and identity preservation");
   Console.WriteLine("PASS exact matching, missing firmware, tampering, stale evidence, UI mismatch, legacy and verification evidence");return 0;
  }catch(Exception ex){Console.Error.WriteLine(ex);return 1;}}
 }
