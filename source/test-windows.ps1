@@ -1,4 +1,4 @@
-param([string]$ReportPath)
+﻿param([string]$ReportPath)
 $ErrorActionPreference='Stop'
 $taskWindowsReport=$ReportPath
 . (Join-Path $PSScriptRoot 'test-ipc.ps1')
@@ -6,6 +6,8 @@ $taskResults=[Collections.Generic.List[string]]::new()
 function Assert-Windows($Condition,[string]$Message){if(-not $Condition){throw $Message};$taskResults.Add('PASS '+$Message)}
 $taskCapture={@('HKCU:\Software\Microsoft\GameBar','HKCU:\Control Panel\Mouse','HKCU:\Control Panel\Accessibility\StickyKeys','HKCU:\Control Panel\Accessibility\Keyboard Response','HKCU:\Control Panel\Accessibility\ToggleKeys') | ForEach-Object {if(Test-Path $_){Get-ItemProperty $_ | Select-Object * -ExcludeProperty PSPath,PSParentPath,PSChildName,PSDrive,PSProvider | ConvertTo-Json -Depth 4 -Compress}}}
 $taskBefore=(& $taskCapture) -join "`n"
+$taskNativeSnapshot=Invoke-HhubRequest 'snapshot'
+if(-not @($taskNativeSnapshot.state.plugins | Where-Object {$_.id -eq 'windows' -and $_.installed}).Count){$taskNativeApp=Split-Path (Get-Process -Id ([int]$taskNativeSnapshot.state.corePid)).Path;$taskPackage=Get-Content -LiteralPath (Join-Path $env:HHUB_NATIVE_TEST_PACKAGES 'Hhub-Windows-Settings-1.0.9.hhub') -Raw -Encoding UTF8 | ConvertFrom-Json;$taskInstall=Invoke-HhubRequest 'importPlugin' @{manifest=$taskPackage};if(-not $taskInstall.ok){throw $taskInstall.error}}
 $taskFirst=Invoke-HhubRequest 'windowsSnapshot'
 Assert-Windows ($taskFirst.ok -and $taskFirst.state.windowsSettings.real) 'Windows settings read actual system preferences'
 $taskData=$taskFirst.state.windowsSettings

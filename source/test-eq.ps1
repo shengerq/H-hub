@@ -1,7 +1,15 @@
-param([string]$ReportPath)
+﻿param([string]$ReportPath)
 $ErrorActionPreference='Stop'
 $taskEqReport=$ReportPath
 . (Join-Path $PSScriptRoot 'test-ipc.ps1')
+$taskNativeSnapshot=Invoke-HhubRequest 'snapshot'
+if(-not @($taskNativeSnapshot.state.plugins | Where-Object { $_.id -eq 'eq' -and $_.installed }).Count){
+ $taskNativeApp=Split-Path (Get-Process -Id ([int]$taskNativeSnapshot.state.corePid)).Path
+ $taskNativeManifest=Get-Content -LiteralPath (Join-Path $env:HHUB_NATIVE_TEST_PACKAGES 'Hhub-EQ-1.0.3.hhub') -Raw -Encoding UTF8 | ConvertFrom-Json
+ $taskNativeInstall=Invoke-HhubRequest 'importPlugin' @{manifest=$taskNativeManifest}
+ if(-not $taskNativeInstall.ok){throw $taskNativeInstall.error}
+}
+
 $taskResults=[Collections.Generic.List[string]]::new()
 function Assert-Eq($Condition,[string]$Message){if(-not $Condition){throw $Message};$taskResults.Add('PASS '+$Message)}
 $taskControl=Join-Path $env:LOCALAPPDATA 'HhubPrototype\eq-audit-control.json'

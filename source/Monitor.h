@@ -3,10 +3,9 @@
 namespace hub {
 struct Monitor : SensorTransport {
  static bool needsAutoElevation(JsonObject o,bool attempted){
-  if(attempted||!flag(o,L"sensorReady")||flag(o,L"virtualMachine")||flag(o,L"sensorElevated")||flag(o,L"sensorHasAdminSession")||flag(o,L"sensorElevationPending"))return false;
-  if(!flag(o,L"pawnInstalled"))return false;
-  bool cpu=false;for(auto const& value:o.GetNamedArray(L"sensors",JsonArray{}))if(str(value.GetObject(),L"category")==L"Cpu"){cpu=true;break;}
-  return cpu&&(numeric(o,L"cpuTemp")<0||numeric(o,L"cpuPower")<=0);
+  // Default to the authorized sensor helper when the signed driver is ready.
+  // A cancelled prompt stays cancelled for this core session.
+  return !attempted&&flag(o,L"sensorReady")&&flag(o,L"pawnInstalled")&&!flag(o,L"sensorElevated")&&!flag(o,L"sensorHasAdminSession")&&!flag(o,L"sensorElevationPending");
  }
  JsonObject sample(bool allowAutoElevation=false){
   if(mousePortTestProfile())allowAutoElevation=false;

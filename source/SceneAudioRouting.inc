@@ -3,7 +3,7 @@
 std::map<std::wstring,std::wstring> sceneAudioOwned;
 void syncSceneAudio(JsonObject state){
  std::map<std::wstring,JsonObject> desired;auto runtime=state.GetNamedObject(L"eqRuntime",JsonObject{});bool available=flag(state.GetNamedObject(L"settings"),L"eqEnabled",true)&&flag(runtime,L"driverReady")&&flag(runtime,L"routingAvailable");
- auto scene=find(state.GetNamedArray(L"scenes"),str(state,L"currentScene"));auto plugin=find(state.GetNamedArray(L"plugins"),L"eq");available=available&&flag(plugin,L"installed")&&str(plugin,L"mode")!=L"disabled"&&str(plugin,L"mode")!=L"manual";
+ auto scene=find(state.GetNamedArray(L"scenes"),str(state,L"currentScene"));auto plugin=pluginRecord(state,L"eq");available=available&&plugin&&flag(plugin,L"installed")&&str(plugin,L"mode")!=L"disabled"&&str(plugin,L"mode")!=L"manual";
  if(available){for(auto const& v:scene.GetNamedArray(L"bindings",JsonArray{})){auto binding=v.GetObject();try{auto p=find(state.GetNamedArray(L"deviceProfiles"),str(binding,L"profile"));if(str(p,L"kind")!=L"audio"||str(p,L"provider")!=L"generic"||!p.HasKey(L"payload"))continue;
  auto sources=runtime.GetNamedArray(L"sources",JsonArray{});if(!sources.Size()||str(p,L"output").empty())continue;
  for(auto const& value:scene.GetNamedArray(L"apps",JsonArray{})){auto app=eqAppId(std::wstring(value.GetString()));bool background=false;for(auto const& saved:state.GetNamedArray(L"eqRealPrefs",JsonArray{})){auto c=saved.GetObject();if(str(c,L"app")==app&&flag(c,L"backgroundAutoStart"))background=true;}if(background)continue;

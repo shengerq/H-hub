@@ -1,8 +1,16 @@
-param([string]$ReportPath)
+﻿param([string]$ReportPath)
 $ErrorActionPreference='Stop'
 $taskPhoneReport=$ReportPath
 $taskTestPort=if($env:HHUB_TEST_PROFILE -eq 'phone-tests'){43828}else{43827}
 . (Join-Path $PSScriptRoot 'test-ipc.ps1')
+$taskNativeSnapshot=Invoke-HhubRequest 'snapshot'
+if(-not @($taskNativeSnapshot.state.plugins | Where-Object { $_.id -eq 'phone' -and $_.installed }).Count){
+ $taskNativeApp=Split-Path (Get-Process -Id ([int]$taskNativeSnapshot.state.corePid)).Path
+ $taskNativeManifest=Get-Content -LiteralPath (Join-Path $env:HHUB_NATIVE_TEST_PACKAGES 'Hhub-Phone-Remote-1.0.9.hhub') -Raw -Encoding UTF8 | ConvertFrom-Json
+ $taskNativeInstall=Invoke-HhubRequest 'importPlugin' @{manifest=$taskNativeManifest}
+ if(-not $taskNativeInstall.ok){throw $taskNativeInstall.error}
+}
+
 Add-Type -TypeDefinition @'
 using System;using System.Net;using System.Net.Http;using System.Security.Cryptography;using System.Security.Cryptography.X509Certificates;using System.Text;
 public sealed class HhubPinnedClient:IDisposable {

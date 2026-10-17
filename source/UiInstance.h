@@ -1,8 +1,8 @@
-#pragma once
+﻿#pragma once
 #include "Common.h"
 
 namespace hub {
-inline wchar_t const* uiWindowProperty=mousePortTestProfile()?L"Hhub.UI.MousePerDeviceTests.MainWindow":L"Hhub.UI.MainWindow";
+inline wchar_t const* uiWindowProperty=uiMemoryTestProfile()?L"Hhub.UI.MemoryTests.MainWindow":mousePortTestProfile()?L"Hhub.UI.MousePerDeviceTests.MainWindow":L"Hhub.UI.MainWindow";
 inline HWND findUiWindow(){
  HWND found{};
  EnumWindows([](HWND window,LPARAM context)->BOOL{

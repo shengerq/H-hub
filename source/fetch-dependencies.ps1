@@ -9,3 +9,4 @@ if((Get-FileHash -LiteralPath $archive).Hash -ne '086D9F1B5A99E643EDC2CFAAAC1605
 $unpacked=Join-Path $scratch 'upstream-0.9.6'
 Expand-Archive -LiteralPath $archive -DestinationPath $unpacked -Force
 Get-ChildItem -LiteralPath $unpacked -Filter '*.dll' | Copy-Item -Destination $folder -Force
+& (Join-Path $PSScriptRoot "Fetch-PawnIO.ps1")

@@ -38,7 +38,7 @@ inline std::wstring trayBatteryText(JsonObject detected,JsonArray plugins=JsonAr
 // A tracking tooltip avoids the tray's 127-character text limit.
 struct TrayBatteryTip {
  HWND window{};TOOLINFOW info{sizeof(info)};std::wstring text;
- ULONGLONG entered{};POINT anchor{};bool visible=false;std::wstring nativeText=L"H hub 1.0";
+ ULONGLONG entered{};POINT anchor{};bool visible=false;std::wstring nativeText=L"H hub 1.1";
  explicit TrayBatteryTip(HWND owner){
   INITCOMMONCONTROLSEX controls{sizeof(controls),ICC_WIN95_CLASSES};InitCommonControlsEx(&controls);
   window=CreateWindowExW(WS_EX_TOPMOST|WS_EX_NOACTIVATE,TOOLTIPS_CLASSW,nullptr,WS_POPUP|TTS_ALWAYSTIP|TTS_NOPREFIX,CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT,owner,nullptr,GetModuleHandleW(nullptr),nullptr);

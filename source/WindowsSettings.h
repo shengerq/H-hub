@@ -1,5 +1,6 @@
-#pragma once
+﻿#pragma once
 #include "Common.h"
+#include "WindowsOptions.h"
 #include <powrprof.h>
 #include <functional>
 #include <mmdeviceapi.h>
@@ -153,7 +154,17 @@ struct WindowsSettings {
  static std::wstring guidString(GUID const& id){wchar_t value[64]{};StringFromGUID2(id,value,64);return value;}
  static std::wstring activePower(){GUID* id{};if(PowerGetActiveScheme(nullptr,&id)!=ERROR_SUCCESS)return L"";auto value=guidString(*id);LocalFree(id);return value;}
  static JsonArray powerPlans(){JsonArray plans;for(ULONG i=0;;i++){GUID id{};DWORD bytes=sizeof(id);auto result=PowerEnumerate(nullptr,nullptr,nullptr,ACCESS_SCHEME,i,(UCHAR*)&id,&bytes);if(result==ERROR_NO_MORE_ITEMS)break;if(result!=ERROR_SUCCESS)break;DWORD length{};PowerReadFriendlyName(nullptr,&id,nullptr,nullptr,nullptr,&length);std::wstring name=L"Windows 电源计划";if(length>0&&length<65536){std::vector<unsigned char> data(length);if(PowerReadFriendlyName(nullptr,&id,nullptr,nullptr,data.data(),&length)==ERROR_SUCCESS)name=(wchar_t*)data.data();}JsonObject p;put(p,L"id",guidString(id));put(p,L"name",name);plans.Append(p);}return plans;}
- JsonObject snapshot(){JsonObject result;JsonArray options;for(auto const& e:entries())options.Append(readOption(e.id));options.Append(readOption(L"systemSound"));options.Append(readOption(L"hdr"));for(auto id:{L"capture",L"gpuScheduling",L"windowedOptimizations",L"notifications"})options.Append(readOption(id));result.SetNamedValue(L"options",options);result.SetNamedValue(L"powerPlans",powerPlans());put(result,L"activePower",activePower());put(result,L"powerCanUndo",undo.HasKey(L"power"));put(result,L"real",true);put(result,L"sampleTime",clockSeconds());return result;}
+ JsonObject snapshot(bool switchesOnly=false){
+  JsonObject result;JsonArray options;
+  for(auto const& item:windowsOptionCatalog()){
+   auto metadata=item.GetObject();auto id=str(metadata,L"id");JsonObject actual;
+   try{actual=readOption(id);}
+   catch(hresult_error const& e){actual=metadata;put(actual,L"status",std::wstring(e.message()));put(actual,L"available",false);put(actual,L"confirmed",false);}
+   catch(...){actual=metadata;put(actual,L"status",std::wstring(L"Windows 未返回有效状态"));put(actual,L"available",false);put(actual,L"confirmed",false);}
+   put(actual,L"loading",false);options.Append(actual);
+  }
+  result.SetNamedValue(L"options",options);if(!switchesOnly){result.SetNamedValue(L"powerPlans",powerPlans());put(result,L"activePower",activePower());put(result,L"powerCanUndo",undo.HasKey(L"power"));}put(result,L"real",true);put(result,L"sampleTime",clockSeconds());return result;
+ }
  static DWORD hotkeyFlags(DWORD original,DWORD mask,bool enabled){return enabled?original|mask:original&~mask;}
  void writeOption(std::wstring const& id,JsonObject const& desired){if(id==L"systemSound"){setSound(desired);return;}if(id==L"hdr"){setHdr(desired);return;}if(!preferenceValues(id).empty()){writePreference(id,desired);return;}auto e=entry(id);
   if(!e.path.empty()){if(!flag(desired,L"present",true)){HKEY key{};auto status=RegOpenKeyExW(HKEY_CURRENT_USER,regPath(e).c_str(),0,KEY_SET_VALUE,&key);if(status==ERROR_FILE_NOT_FOUND)return;if(status!=ERROR_SUCCESS)throw hresult_error(HRESULT_FROM_WIN32(status));status=RegDeleteValueW(key,e.value.c_str());RegCloseKey(key);if(status!=ERROR_SUCCESS&&status!=ERROR_FILE_NOT_FOUND)throw hresult_error(HRESULT_FROM_WIN32(status));return;}

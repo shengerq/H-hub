@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "DeviceReader.h"
 #include "EqAudio.h"
 #include "AudioNodeName.h"
@@ -22,8 +22,8 @@ inline int installIntegratedAudioDriver(std::filesystem::path inf,std::filesyste
    std::vector<wchar_t> hardware(hardwareId.begin(),hardwareId.end());hardware.push_back(0);hardware.push_back(0);
    if(!SetupDiSetDeviceRegistryPropertyW(set,&device,SPDRP_HARDWAREID,(BYTE*)hardware.data(),(DWORD)(hardware.size()*sizeof(wchar_t)))||!SetupDiCallClassInstaller(DIF_REGISTERDEVICE,set,&device))throw hresult_error(HRESULT_FROM_WIN32(GetLastError()));created=true;
   }
-  BOOL reboot{};if(!UpdateDriverForPlugAndPlayDevicesW(nullptr,hardwareId.c_str(),inf.c_str(),0,&reboot))throw hresult_error(HRESULT_FROM_WIN32(GetLastError()));
-  put(result,L"nameUpdated",renameIntegratedAudioNode({})==0);put(result,L"ok",true);put(result,L"phase",std::wstring(L"complete"));put(result,L"repair",found);put(result,L"rebootRequired",reboot!=FALSE);write(report,std::wstring(result.Stringify()));if(set!=INVALID_HANDLE_VALUE)SetupDiDestroyDeviceInfoList(set);return reboot?3010:0;
+  EqNode::physicalDefaults();auto physicalRoles=EqNode::physicalRoleDefaults();BOOL reboot{};if(!UpdateDriverForPlugAndPlayDevicesW(nullptr,hardwareId.c_str(),inf.c_str(),0,&reboot))throw hresult_error(HRESULT_FROM_WIN32(GetLastError()));
+  EqNode::physicalDefaults(L"",physicalRoles);put(result,L"nameUpdated",renameIntegratedAudioNode({})==0);put(result,L"ok",true);put(result,L"phase",std::wstring(L"complete"));put(result,L"repair",found);put(result,L"rebootRequired",reboot!=FALSE);write(report,std::wstring(result.Stringify()));if(set!=INVALID_HANDLE_VALUE)SetupDiDestroyDeviceInfoList(set);return reboot?3010:0;
  }catch(hresult_error const& e){put(result,L"ok",false);put(result,L"error",std::wstring(e.message()));put(result,L"hresult",(double)e.code().value);if(created)SetupDiCallClassInstaller(DIF_REMOVE,set,&device);if(set!=INVALID_HANDLE_VALUE)SetupDiDestroyDeviceInfoList(set);write(report,std::wstring(result.Stringify()));return 1;}
 }
 }
