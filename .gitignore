@@ -64,3 +64,45 @@ desktop.ini
 *.bak
 *.orig
 *.rej
+
+# Desktop build/runtime outputs; optional application source is in its own repository.
+build/
+source/obj/
+app/*.dll
+app/*.exe
+app/*.winmd
+app/*.pri
+app/*.lib
+app/runtime/
+app/sensors/*.dll
+app/sensors/*.exe
+*.pfx
+*.key
+
+# Desktop build/runtime outputs; optional application source is in its own repository.
+build/
+source/obj/
+app/*.dll
+app/*.exe
+app/*.winmd
+app/*.pri
+app/*.lib
+app/runtime/
+app/sensors/*.dll
+app/sensors/*.exe
+*.pfx
+*.key
+
+# Desktop build/runtime outputs; optional application source is in its own repository.
+build/
+source/obj/
+app/*.dll
+app/*.exe
+app/*.winmd
+app/*.pri
+app/*.lib
+app/runtime/
+app/sensors/*.dll
+app/sensors/*.exe
+*.pfx
+*.key

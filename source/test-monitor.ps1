@@ -1,4 +1,4 @@
-param([string]$ReportPath)
+﻿param([string]$ReportPath)
 $ErrorActionPreference='Stop'
 $taskMonitorReportPath=$ReportPath
 . (Join-Path $PSScriptRoot 'test-ipc.ps1')

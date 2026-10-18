@@ -1,4 +1,4 @@
-bool audioDriverRepairBusy=false;
+﻿bool audioDriverRepairBusy=false;
 winrt::fire_and_forget repairAudioDriver(){
  if(audioDriverRepairBusy)co_return;audioDriverRepairBusy=true;auto lifetime=get_strong();winrt::apartment_context ui;std::wstring message;bool failed=false;
  auto inf=binaryDir()/L"drivers"/L"audio"/L"fxvad.inf";auto core=binaryDir()/L"Hhub.Core.exe";auto report=dataDir()/(L"audio-driver-repair-"+std::to_wstring(GetTickCount64())+L".json");

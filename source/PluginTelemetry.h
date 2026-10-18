@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "DeviceReader.h"
 #include <map>
 namespace hub {
@@ -23,7 +23,7 @@ struct PluginInputReader {
 };
 struct PluginTelemetry {
  std::map<std::wstring,std::unique_ptr<PluginInputReader>> readers;std::wstring signature;
- void sync(JsonObject state){std::wstring next;std::map<std::wstring,JsonObject> rules;for(auto const& value:state.GetNamedArray(L"plugins")){auto p=value.GetObject();if(!flag(p,L"installed")||str(p,L"mode")==L"disabled"||!p.HasKey(L"inputTelemetry"))continue;bool granted=false;for(auto const& permission:p.GetNamedArray(L"permissions",JsonArray{}))if(permission.GetString()==L"USB HID 配置")granted=true;if(!granted)continue;auto rule=p.GetNamedObject(L"inputTelemetry");bool matched=false;for(auto const& target:p.GetNamedArray(L"hidTargets",JsonArray{})){auto t=target.GetObject();if(num(rule,L"vid")==num(t,L"vid")&&num(rule,L"pid")==num(t,L"pid")&&num(rule,L"usagePage")==num(t,L"usagePage"))matched=true;}if(!matched)continue;auto id=str(p,L"id");rules[id]=rule;next+=id+std::wstring(rule.Stringify());}
+ void sync(JsonObject state){std::wstring next;std::map<std::wstring,JsonObject> rules;for(auto const& value:state.GetNamedArray(L"plugins")){auto p=value.GetObject();if(!flag(p,L"installed")||flag(p,L"forceStopped")||str(p,L"mode")==L"disabled"||!p.HasKey(L"inputTelemetry"))continue;bool granted=false;for(auto const& permission:p.GetNamedArray(L"permissions",JsonArray{}))if(permission.GetString()==L"USB HID 配置")granted=true;if(!granted)continue;auto rule=p.GetNamedObject(L"inputTelemetry");bool matched=false;for(auto const& target:p.GetNamedArray(L"hidTargets",JsonArray{})){auto t=target.GetObject();if(num(rule,L"vid")==num(t,L"vid")&&num(rule,L"pid")==num(t,L"pid")&&num(rule,L"usagePage")==num(t,L"usagePage"))matched=true;}if(!matched)continue;auto id=str(p,L"id");rules[id]=rule;next+=id+std::wstring(rule.Stringify());}
   if(next!=signature){readers.clear();for(auto const& [id,rule]:rules)readers[id]=std::make_unique<PluginInputReader>(rule);signature=next;}for(auto const& [id,reader]:readers)reader->tick();
  }
  JsonObject snapshot(std::wstring id){auto i=readers.find(id);if(i==readers.end())throw hresult_error(E_ACCESSDENIED,L"插件未启用电量读取");return i->second->snapshot();}

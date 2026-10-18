@@ -1,4 +1,4 @@
-param([ValidateSet('audio','pawnio')][string]$Driver,[switch]$VerifyOnly)
+﻿param([ValidateSet('pawnio')][string]$Driver,[switch]$VerifyOnly)
 $ErrorActionPreference='Stop'
 [Net.ServicePointManager]::SecurityProtocol=[Net.SecurityProtocolType]::Tls12
 $driverWork=Join-Path ([IO.Path]::GetTempPath()) ('HhubDriver-'+[Guid]::NewGuid().ToString('N'))
@@ -10,19 +10,11 @@ try {
   Invoke-WebRequest 'https://github.com/namazso/PawnIO.Setup/releases/download/2.2.0/PawnIO_setup.exe' -UseBasicParsing -OutFile $driverExe
   if((Get-FileHash $driverExe -Algorithm SHA256).Hash -ne '1f519a22e47187f70a1379a48ca604981c4fcf694f4e65b734aaa74a9fba3032'){throw 'PawnIO download hash mismatch'}
   $publisherPattern='namazso'
- } else {
-  if(-not $VerifyOnly -and (Get-CimInstance Win32_PnPEntity | Where-Object {$_.HardwareID -contains 'VBAudioVACWDM'})){exit 0}
-  $driverZip=Join-Path $driverWork 'VBCABLE.zip'
-  Invoke-WebRequest 'https://download.vb-audio.com/Download_CABLE/VBCABLE_Driver_Pack45.zip' -UseBasicParsing -OutFile $driverZip
-  Expand-Archive -LiteralPath $driverZip -DestinationPath (Join-Path $driverWork 'cable')
-  $driverExe=(Get-ChildItem (Join-Path $driverWork 'cable') -Filter 'VBCABLE_Setup_x64.exe' -Recurse | Select-Object -First 1).FullName
-  if(-not $driverExe){throw 'Official x64 audio installer missing'}
-  $publisherPattern='VB.Audio|Vincent Burel|BUREL VINCENT'
  }
  $driverSignature=Get-AuthenticodeSignature -LiteralPath $driverExe
  if($driverSignature.Status -ne 'Valid' -or $driverSignature.SignerCertificate.Subject -notmatch $publisherPattern){throw 'Driver publisher signature validation failed'}
  if($VerifyOnly){Write-Output "$Driver verified: $($driverSignature.SignerCertificate.Subject)";exit 0}
- $driverProcess=Start-Process -FilePath $driverExe -Verb RunAs -Wait -PassThru
+ $driverOptions=@{FilePath=$driverExe;Verb="RunAs";WindowStyle="Hidden";Wait=$true;PassThru=$true}; if($Driver -eq "pawnio"){$driverOptions.ArgumentList="-install -silent"}; $driverProcess=Start-Process @driverOptions
  if($driverProcess.ExitCode -notin @(0,3010)){throw "Driver installer returned $($driverProcess.ExitCode)"}
  exit $driverProcess.ExitCode
 } catch {

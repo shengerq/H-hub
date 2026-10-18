@@ -1,8 +1,8 @@
-#pragma once
+﻿#pragma once
 #include "HidProbe.h"
 namespace hub {
 inline void validatePluginHidRequest(JsonObject plugin,JsonObject request){
- if(!flag(plugin,L"installed")||str(plugin,L"mode")==L"disabled")throw hresult_error(E_ACCESSDENIED,L"设备插件尚未启用");
+ if(!flag(plugin,L"installed")||flag(plugin,L"forceStopped")||str(plugin,L"mode")==L"disabled")throw hresult_error(E_ACCESSDENIED,L"设备插件尚未启用");
  bool granted=false;for(auto const& value:plugin.GetNamedArray(L"permissions",JsonArray{}))if(value.GetString()==L"USB HID 配置")granted=true;
  if(!granted)throw hresult_error(E_ACCESSDENIED,L"插件未声明 USB HID 配置权限");
  auto match=request.GetNamedObject(L"match");JsonObject target{nullptr};

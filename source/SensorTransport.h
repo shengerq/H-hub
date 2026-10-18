@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "MonitorProjection.h"
 #include <dxgi1_2.h>
 #include <map>

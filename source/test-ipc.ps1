@@ -1,4 +1,4 @@
-param([string]$ReportPath)
+﻿param([string]$ReportPath)
 $ErrorActionPreference='Stop'
 $taskPipe='HhubPrototype.v1.'+[Security.Principal.WindowsIdentity]::GetCurrent().User.Value
 if($env:HHUB_TEST_PROFILE -eq 'phone-tests'){$taskPipe+='.PhoneTests'}

@@ -5,10 +5,10 @@
  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
  <PropertyGroup Label="Configuration"><ConfigurationType>Application</ConfigurationType><UseDebugLibraries>false</UseDebugLibraries><PlatformToolset>v143</PlatformToolset><CharacterSet>Unicode</CharacterSet></PropertyGroup>
  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
- <PropertyGroup><OutDir>$(ProjectDir)..\app\</OutDir><IntDir>$(ProjectDir)..\build\core\</IntDir><TargetName>Hhub.Core</TargetName></PropertyGroup>
- <ItemDefinitionGroup><ClCompile><WarningLevel>Level3</WarningLevel><LanguageStandard>stdcpp20</LanguageStandard><ExceptionHandling>Sync</ExceptionHandling><RuntimeLibrary>MultiThreaded</RuntimeLibrary><AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions><PreprocessorDefinitions>UNICODE;_UNICODE;NOMINMAX;WIN32_LEAN_AND_MEAN;%(PreprocessorDefinitions)</PreprocessorDefinitions></ClCompile><Link><SubSystem>Windows</SubSystem><AdditionalDependencies>shlwapi.lib;windowsapp.lib;advapi32.lib;psapi.lib;shell32.lib;ole32.lib;%(AdditionalDependencies)</AdditionalDependencies></Link></ItemDefinitionGroup>
- <ItemGroup><ClCompile Include="Core.cpp" /><ClInclude Include="Common.h" /><ClInclude Include="Model.h" /></ItemGroup>
+ <PropertyGroup><OutDir>$(ProjectDir)..\host-bin\</OutDir><IntDir>$(ProjectDir)..\build\core\</IntDir><TargetName>Hhub.Core</TargetName></PropertyGroup>
+ <ItemDefinitionGroup><ClCompile><WarningLevel>Level3</WarningLevel><LanguageStandard>stdcpp20</LanguageStandard><ExceptionHandling>Sync</ExceptionHandling><RuntimeLibrary>MultiThreaded</RuntimeLibrary><AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions><PreprocessorDefinitions>UNICODE;_UNICODE;NOMINMAX;WIN32_LEAN_AND_MEAN;%(PreprocessorDefinitions)</PreprocessorDefinitions></ClCompile><Link><SubSystem>Windows</SubSystem><AdditionalDependencies>shlwapi.lib;windowsapp.lib;advapi32.lib;psapi.lib;shell32.lib;ole32.lib;%(AdditionalDependencies)</AdditionalDependencies></Link><Manifest><AdditionalManifestFiles>$(ProjectDir)app.manifest;%(AdditionalManifestFiles)</AdditionalManifestFiles></Manifest></ItemDefinitionGroup>
+ <ItemGroup><ClCompile Include="Core.cpp" /><ClInclude Include="Common.h" /><ClInclude Include="HomeMonitoring.h" /><ClInclude Include="Model.h" /></ItemGroup>
  <ItemGroup><ResourceCompile Include="Version.rc" /></ItemGroup>
- <ItemGroup><ProjectReference Include="vendor\fxsound\full\dsp\DfxDsp.vcxproj"><Project>{F72F101C-13C0-4638-9FFA-BF15861D6F67}</Project></ProjectReference></ItemGroup>
+
  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

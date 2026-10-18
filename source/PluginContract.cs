@@ -20,7 +20,7 @@ internal static class PluginContract {
   string group=hardware?"peripheral":"application";
   string category=hardware?(kind=="audio"?"headset":new[]{"mouse","keyboard","headset","gamepad"}.Contains(kind)?kind:"other"):(kind=="developer-tools"?"testing":"other");
   if(entry.ContainsKey("group")||entry.ContainsKey("category")){
-   group=S(entry,"group");category=S(entry,"category");
+   group=S(entry,"group");category=S(entry,"category");if(group=="applications")group="application";if(group=="peripherals")group="peripheral";if(group=="application"&&(category=="application"||category=="test"))category=category=="test"?"testing":"other";
    if(group!="peripheral"&&group!="application")throw new Exception("插件大类必须是 peripheral 或 application");
    var allowed=group=="peripheral"?new[]{"mouse","keyboard","headset","gamepad","other"}:new[]{"experimental","testing","other"};
    if(!allowed.Contains(category))throw new Exception("插件子分类不属于所选大类");

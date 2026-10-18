@@ -1,4 +1,4 @@
-param()
+﻿param()
 $ErrorActionPreference = 'Stop'
 $taskSensorDirectory = Join-Path $PSScriptRoot '..\app\sensors'
 $taskOutputDirectory = Join-Path $PSScriptRoot '..\build\monitor-tests'

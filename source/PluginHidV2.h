@@ -1,9 +1,9 @@
-#pragma once
+﻿#pragma once
 #include "DeviceReader.h"
+#include "VirtualMouse.h"
 #include <map>
 #include <set>
 #include <memory>
-#include "VirtualMouse.h"
 
 namespace hub {
 // Native bridge for reviewed offline WebHID protocol adapters.
@@ -50,9 +50,9 @@ struct PluginHidV2 {
    }HidD_FreePreparsedData(prep);CloseHandle(h);
   }}catch(...){SetupDiDestroyDeviceInfoList(set);throw;}SetupDiDestroyDeviceInfoList(set);JsonObject reply;reply.SetNamedValue(L"devices",result);put(reply,L"transportVersion",2.0);return reply;
  }
- void revoke(JsonObject state){for(auto it=batterySamples.begin();it!=batterySamples.end();){bool keep=false;for(auto const& value:state.GetNamedArray(L"plugins")){auto p=value.GetObject();if(str(p,L"id")==str(it->second,L"pluginId")&&flag(p,L"installed")&&str(p,L"mode")!=L"disabled")keep=true;}if(!keep||clockSeconds()-num(it->second,L"sampleTime")>60)it=batterySamples.erase(it);else ++it;}for(auto it=sessions.begin();it!=sessions.end();){bool keep=false;for(auto const& value:state.GetNamedArray(L"plugins")){auto p=value.GetObject();if(str(p,L"id")==it->first&&flag(p,L"installed")&&str(p,L"mode")!=L"disabled")keep=true;}if(!keep)it=sessions.erase(it);else ++it;}}
+ void revoke(JsonObject state){for(auto it=batterySamples.begin();it!=batterySamples.end();){bool keep=false;for(auto const& value:state.GetNamedArray(L"plugins")){auto p=value.GetObject();if(str(p,L"id")==str(it->second,L"pluginId")&&flag(p,L"installed")&&!flag(p,L"forceStopped")&&str(p,L"mode")!=L"disabled")keep=true;}if(!keep||clockSeconds()-num(it->second,L"sampleTime")>60)it=batterySamples.erase(it);else ++it;}for(auto it=sessions.begin();it!=sessions.end();){bool keep=false;for(auto const& value:state.GetNamedArray(L"plugins")){auto p=value.GetObject();if(str(p,L"id")==it->first&&flag(p,L"installed")&&!flag(p,L"forceStopped")&&str(p,L"mode")!=L"disabled")keep=true;}if(!keep)it=sessions.erase(it);else ++it;}}
  JsonObject transact(JsonObject state,JsonObject body){
-  auto id=str(body,L"id");auto plugin=find(state.GetNamedArray(L"plugins"),id);if(!flag(plugin,L"installed")||str(plugin,L"mode")==L"disabled")throw hresult_error(E_ACCESSDENIED,L"插件未安装或已禁用");bool allowed=false;for(auto const& permission:plugin.GetNamedArray(L"permissions",JsonArray{}))if(permission.GetString()==L"USB HID 配置")allowed=true;if(!allowed)throw hresult_error(E_ACCESSDENIED,L"插件没有 HID 配置权限");
+  auto id=str(body,L"id");auto plugin=find(state.GetNamedArray(L"plugins"),id);if(!flag(plugin,L"installed")||flag(plugin,L"forceStopped")||str(plugin,L"mode")==L"disabled")throw hresult_error(E_ACCESSDENIED,L"插件未安装或已禁用");bool allowed=false;for(auto const& permission:plugin.GetNamedArray(L"permissions",JsonArray{}))if(permission.GetString()==L"USB HID 配置")allowed=true;if(!allowed)throw hresult_error(E_ACCESSDENIED,L"插件没有 HID 配置权限");
   auto request=body.GetNamedObject(L"request");if(VirtualMouse::enabled())return virtualMouse.transact(id,plugin,request,matches);auto op=str(request,L"operation");JsonObject result;put(result,L"transportVersion",2.0);if(op==L"closeAll"){sessions.erase(id);return result;}if(op==L"enumerate")return enumerate(id,plugin);
   auto owner=sessions.find(id);if(owner==sessions.end())throw hresult_error(E_ACCESSDENIED,L"请先枚举并选择设备");auto found=owner->second.find(str(request,L"key"));if(found==owner->second.end())throw hresult_error(E_ACCESSDENIED,L"设备令牌不属于此插件");auto& device=*found->second;
   if(op==L"close"){device.close();return result;}
