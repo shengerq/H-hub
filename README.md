@@ -1,4 +1,4 @@
-﻿# Hhub 1.0
+# Hhub 1.0
 
 Windows 11 x64 原生设备控制中心，使用 WinUI 3 / C++/WinRT。
 
@@ -11,7 +11,7 @@ Windows 11 x64 原生设备控制中心，使用 WinUI 3 / C++/WinRT。
 - [外设插件库](https://github.com/shengerq/H-hub-plugins)：鼠标、键盘等外设插件及开发测试工具。
 - [应用插件库](https://github.com/shengerq/H-hub-app-plugins)：手机遥控、通用 EQ、Windows 管理，当前均为 **1.0**。
 
-插件市场默认注册两个库，可在页面中直接切换；升级保留用户自定义源。
+插件市场默认注册两个库，并将所有已启用来源统一按鼠标、键盘、耳机、手柄、应用、其他分类；升级保留用户自定义源。
 
 ## 源码边界
 

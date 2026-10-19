@@ -18,7 +18,7 @@
 - 外设插件库：`https://raw.githubusercontent.com/shengerq/H-hub-plugins/main/index.json`
 - 应用插件库：`https://raw.githubusercontent.com/shengerq/H-hub-app-plugins/main/index.json`
 
-市场通过“外设插件库 / 应用插件库”切换显示，两个索引的 relatedLibraries 互相连接。一次性迁移保留自定义来源，之后尊重用户的停用和删除操作。基础安装包不携带应用插件。
+市场合并所有已启用来源，统一按“鼠标、键盘、耳机、手柄、应用、其他”分类显示；两个官方索引的 relatedLibraries 仍互相连接。一次性迁移保留自定义来源，之后尊重用户的停用和删除操作。基础安装包不携带应用插件。
 
 手机遥控、EQ、Windows 管理当前均为 1.0；页面、预设和后台由应用插件库独立构建，通过通用插件接口加载。主程序负责插件管理、状态监测、强制停止和原生系统监测、设备监测、场景配置。
 
