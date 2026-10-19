@@ -643,6 +643,7 @@
     "筛选品牌": "Filter by brand",
     "筛选型号": "Filter by model",
     "清除筛选": "Clear filters",
-    "没有匹配的插件，可清除筛选或同步插件库": "No matching plugins. Clear filters or sync the libraries."
+    "没有匹配的插件，可清除筛选或同步插件库": "No matching plugins. Clear filters or sync the libraries.",
+    "应用分类": "Applications"
   }
 }
