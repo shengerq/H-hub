@@ -25,3 +25,5 @@
 卸载先停止本插件后台并清理其资源。插件更新保留配置；手机卸载会清理配对与证书。独立安装的共享音频驱动不随插件卸载删除。Windows 插件卸载不重置用户已应用的系统偏好。
 
 回归检查：`python PluginCatalogTests.py <Hhub.Catalog.exe 路径> [插件库 index.json 路径]`。通用原生插件契约另由核心 `--self-test` 检查。
+
+品牌、型号、多关键词搜索与第三方索引字段说明见 [市场浏览与第三方插件库](./CATALOG-BROWSING.md)。

@@ -83,7 +83,7 @@ internal static class PluginCatalog {
    entry["group"]=kind=="application"?"applications":"peripherals";
    entry["category"]=kind=="application"?(S(e,"category")=="test"?"test":"application"):kind;
    entry["brand"]=Short(S(e,"brand"),100);
-   foreach(var key in new[]{"compatibility","identityCode","verificationStatus","mobileUiVerified","group","category","releaseEpoch"})if(e.ContainsKey(key))entry[key]=e[key];object tags;if(e.TryGetValue("tags",out tags)&&tags is object[])entry["tags"]=((object[])tags).OfType<string>().Take(16).Select(t=>Short(t,100)).ToArray();list.Add(entry);
+   foreach(var key in new[]{"compatibility","identityCode","verificationStatus","mobileUiVerified","group","category","releaseEpoch","model"})if(e.ContainsKey(key))entry[key]=e[key];object tags;if(e.TryGetValue("tags",out tags)&&tags is object[])entry["tags"]=((object[])tags).OfType<string>().Take(16).Select(t=>Short(t,100)).ToArray();list.Add(entry);
   }return Obj("ok",true,"name",S(feed,"name"),"plugins",list.ToArray(),"indexUrl",source.AbsoluteUri,"checkedAt",DateTime.UtcNow.ToString("o"));
  }
  static string Short(string text,int length) { return text.Length>length?text.Substring(0,length):text; }
@@ -98,7 +98,13 @@ internal static class PluginCatalog {
  static IEnumerable<string> PackageFiles(string directory,int depth) {
   if(depth>8)throw new Exception("插件库目录层级不能超过 8 层");
   foreach(var file in Directory.GetFiles(directory,"*.hhub").OrderBy(x=>x,StringComparer.Ordinal))if((File.GetAttributes(file)&FileAttributes.ReparsePoint)==0)yield return file;
-  foreach(var child in Directory.GetDirectories(directory).OrderBy(x=>x,StringComparer.Ordinal))if(Path.GetFileName(child)!=".git"&&(File.GetAttributes(child)&FileAttributes.ReparsePoint)==0)foreach(var file in PackageFiles(child,depth+1))yield return file;
+  foreach(var child in Directory.GetDirectories(directory).OrderBy(x=>x,StringComparer.Ordinal))if(Path.GetFileName(child)!=".git"&&Path.GetFileName(child)!="资料源码"&&(File.GetAttributes(child)&FileAttributes.ReparsePoint)==0)foreach(var file in PackageFiles(child,depth+1))yield return file;
+ }
+ static string DirectoryBrand(string[] parts,string kind) {
+  if(kind=="application"||parts.Length<2)return "";
+  string[] folders={"外设插件","鼠标","键盘","耳机","手柄","其他","mouse","keyboard","headset","controller","gamepad","other"};
+  int i=0;while(i<parts.Length-1&&folders.Contains(parts[i]))i++;
+  return i<parts.Length-1?parts[i]:"";
  }
  static Dictionary<string,object> DirectoryIndex(string directory) {
   string root=Path.GetFullPath(directory).TrimEnd(Path.DirectorySeparatorChar)+Path.DirectorySeparatorChar;var entries=new List<object>();var ids=new HashSet<string>();
@@ -107,7 +113,7 @@ internal static class PluginCatalog {
    var bytes=Fetch(new Uri(file),MaxPackageBytes);Dictionary<string,object> manifest;
    try{manifest=Parse(bytes);}catch(Exception e){throw new Exception(Path.GetFileName(file)+"："+e.Message);}
    if(!ids.Add(S(manifest,"id")))throw new Exception("插件库中存在重复插件 ID："+S(manifest,"id"));
-   string relative=file.Substring(root.Length).Replace('\\','/');var parts=relative.Split('/');string kind=CatalogKind(manifest,relative),brand=kind!="application"&&parts.Length>=4?parts[2]:"";
+   string relative=file.Substring(root.Length).Replace('\\','/');var parts=relative.Split('/');string kind=CatalogKind(manifest,relative),brand=DirectoryBrand(parts,kind);
    var entry=Obj("id",S(manifest,"id"),"name",S(manifest,"name"),"author",S(manifest,"author"),"version",S(manifest,"version"),"kind",kind,"group",kind=="application"?"applications":"peripherals","category",kind=="application"&&(relative.Contains("测试型")||S(manifest,"category")=="test")?"test":kind,"brand",brand,"description",Short(S(manifest,"description"),1024),"sha256",Digest(bytes),"packageUrl",String.Join("/",parts.Select(Uri.EscapeDataString)),"tags",new string[]{brand,kind});entries.Add(entry);
   }
   var sorted=entries.Cast<Dictionary<string,object>>().OrderBy(e=>S(e,"kind")=="application"?0:1).ThenBy(e=>S(e,"kind"),StringComparer.Ordinal).ThenBy(e=>S(e,"brand"),StringComparer.Ordinal).ThenBy(e=>S(e,"name"),StringComparer.Ordinal).Cast<object>().ToArray();

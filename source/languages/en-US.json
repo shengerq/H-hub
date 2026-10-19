@@ -634,6 +634,15 @@
     "多个设备": "Multiple devices",
     "连接方式未提供": "Connection not reported",
     "蓝牙": "Bluetooth",
-    "使用 H hub App 内扫码连接，或用手机浏览器扫码打开。": "Scan in the H hub app, or scan with your phone browser to open the web remote."
+    "使用 H hub App 内扫码连接，或用手机浏览器扫码打开。": "Scan in the H hub app, or scan with your phone browser to open the web remote.",
+    "品牌": "Brand",
+    "型号": "Model",
+    "全部品牌": "All brands",
+    "全部型号": "All models",
+    "先选择品牌": "Select a brand first",
+    "筛选品牌": "Filter by brand",
+    "筛选型号": "Filter by model",
+    "清除筛选": "Clear filters",
+    "没有匹配的插件，可清除筛选或同步插件库": "No matching plugins. Clear filters or sync the libraries."
   }
 }
