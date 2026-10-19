@@ -13,6 +13,7 @@ inline std::wstring catalogKind(JsonObject entry){
  return kind==L"mouse"||kind==L"keyboard"||kind==L"headset"||kind==L"controller"?kind:L"other";
 }
 inline std::wstring catalogModel(JsonObject entry){auto value=str(entry,L"model");if(value.empty())value=str(entry.GetNamedObject(L"compatibility",JsonObject{}),L"deviceName");return value.empty()?str(entry,L"name"):value;}
+inline bool catalogQueryActive(std::wstring query){return std::any_of(query.begin(),query.end(),[](wchar_t c){return !iswspace(c);});}
 inline bool catalogQueryMatches(JsonObject entry,std::wstring query){
  auto compatibility=entry.GetNamedObject(L"compatibility",JsonObject{});
  auto hay=catalogFold(str(entry,L"identityCode")+L" "+str(entry,L"name")+L" "+str(entry,L"id")+L" "+str(entry,L"author")+L" "+str(entry,L"brand")+L" "+catalogModel(entry)+L" "+str(compatibility,L"hardwareId")+L" "+str(entry,L"description")+L" "+str(entry,L"sourceName")+std::wstring(entry.GetNamedArray(L"tags",JsonArray{}).Stringify()));

@@ -19,7 +19,7 @@ void queueCatalogSearch(){if(!catalogSearchDelay){catalogSearchDelay=DispatcherT
 void catalogFilters(StackPanel host){
  catalogFilterHost=Grid{};auto grid=catalogFilterHost;grid.ColumnSpacing(6);grid.RowSpacing(6);
  std::vector<std::pair<std::wstring,std::wstring>> options={{L"mouse",tr(L"鼠标")},{L"keyboard",tr(L"键盘")},{L"headset",tr(L"耳机")},{L"controller",tr(L"手柄")},{L"application",tr(L"应用分类")},{L"other",tr(L"其他")}};
- for(auto const& [key,name]:options){auto action=button(name,[this,key]{if(catalogKindFilter==key)return;catalogKindFilter=key;catalogPageIndex=0;render();},catalogKindFilter==key);action.Tag(box_value(key));action.HorizontalAlignment(HorizontalAlignment::Stretch);action.MinWidth(0);grid.Children().Append(action);}
+ for(auto const& [key,name]:options){auto action=button(name,[this,key]{if(catalogKindFilter==key&&!catalogQueryActive(pluginQuery))return;catalogKindFilter=key;pluginQuery.clear();catalogPageIndex=0;render();},catalogKindFilter==key&&!catalogQueryActive(pluginQuery));action.Tag(box_value(key));action.HorizontalAlignment(HorizontalAlignment::Stretch);action.MinWidth(0);grid.Children().Append(action);}
  auto total=(int)options.size();auto layout=[grid,total](double width){int count=std::clamp((int)((width+6)/105),1,total);if((int)grid.ColumnDefinitions().Size()==count)return;grid.ColumnDefinitions().Clear();grid.RowDefinitions().Clear();for(int i=0;i<count;i++){ColumnDefinition c;c.Width({1,GridUnitType::Star});grid.ColumnDefinitions().Append(c);}for(int i=0;i<(total+count-1)/count;i++){RowDefinition row;row.Height({0,GridUnitType::Auto});grid.RowDefinitions().Append(row);}for(int i=0;i<total;i++){Grid::SetColumn(grid.Children().GetAt(i).as<FrameworkElement>(),i%count);Grid::SetRow(grid.Children().GetAt(i).as<FrameworkElement>(),i/count);}};
  onSizeChanged(grid,[layout](auto const&,SizeChangedEventArgs const& e){layout(e.NewSize().Width);});layout(900);host.Children().Append(grid);
 }
@@ -29,10 +29,10 @@ void fitCatalogPage(){
  auto height=std::max(52.0,available/catalogPageSize);for(uint32_t i=0;i+1<catalogItems.Children().Size();++i)if(auto card=catalogItems.Children().GetAt(i).try_as<Border>()){if(std::abs(card.MaxHeight()-height)>.5)card.MaxHeight(height);}
 }
 void queueCatalogFit(){if(catalogFitQueued||!catalogItems)return;catalogFitQueued=true;page.DispatcherQueue().TryEnqueue(Microsoft::UI::Dispatching::DispatcherQueuePriority::Low,[this]{catalogFitQueued=false;fitCatalogPage();});}
-void updateCatalogList(){if(!catalogItems)return;
+void updateCatalogList(){if(!catalogItems)return;bool searching=catalogQueryActive(pluginQuery);if(catalogFilterHost)for(auto const& child:catalogFilterHost.Children()){auto action=child.as<Button>();auto key=unbox_value_or<hstring>(action.Tag(),hstring{});if(!searching&&key==catalogKindFilter)styleAccentButton(action);else{action.Resources(ResourceDictionary{});action.Background(dark?brush(41,49,61):brush(242,244,248));action.Foreground(dark?brush(245,245,245):brush(27,27,27));}action.Tag(box_value(key));}
  JsonArray matches;std::map<std::wstring,uint32_t> identities;
  for(auto const& value:catalogFeed.GetNamedArray(L"plugins",JsonArray{})){
-  auto entry=value.GetObject();if(!pluginMatches(entry)||catalogEntryKind(entry)!=catalogKindFilter)continue;
+  auto entry=value.GetObject();if(!pluginMatches(entry)||(!searching&&catalogEntryKind(entry)!=catalogKindFilter))continue;
   auto key=str(entry,L"id")+L"\n"+str(entry,L"author")+L"\n"+str(entry,L"version")+L"\n"+str(entry,L"sha256");
   if(auto found=identities.find(key);found!=identities.end()){auto existing=object(std::wstring(matches.GetObjectAt(found->second).Stringify()));put(existing,L"sourceName",str(existing,L"sourceName")+L" / "+str(entry,L"sourceName"));matches.SetAt(found->second,existing);}else{identities[key]=matches.Size();matches.Append(entry);}
  }
