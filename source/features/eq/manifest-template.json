@@ -1,0 +1,176 @@
+{
+  "schemaVersion": 1,
+  "id": "eq",
+  "name": "Hhub 通用 EQ",
+  "author": "H hub",
+  "version": "1.0",
+  "apiVersion": "1.0",
+  "kind": "application",
+  "description": "独立 EQ 页面、算法与预设；复用原版 FxSound 签名驱动，保留原名称，FxSound 运行时暂停让出共享驱动。",
+  "nativePage": "eq",
+  "requiredHost": {
+    "id": "hhub",
+    "apiVersion": "1.4",
+    "execution": "host-only",
+    "standalone": false,
+    "minimumVersion": "1.0",
+    "releaseEpoch": 1
+  },
+  "permissions": [
+    "应用音频路由",
+    "音频输出配置",
+    "可选虚拟音频驱动安装（需单独管理员授权）"
+  ],
+  "updateUrl": "",
+  "compatibility": {
+    "version": 1,
+    "scope": "tool",
+    "deviceName": "",
+    "hardwareId": "",
+    "firmwareVersions": [],
+    "mobileUi": false
+  },
+  "implementation": {
+    "type": "native-module",
+    "abiVersion": 1,
+    "library": "Hhub.EQ.dll",
+    "notes": "插件自行提供 UI、预设和业务功能；由宿主独立进程承载并嵌入内容区域。"
+  },
+  "nativeAssets": [],
+  "driverNotice": "复用 FxSound 官方原版签名虚拟音频驱动，保留原名称和原许可，不重新命名设备；与 FxSound 互斥使用共享音频链路。",
+  "navigation": {
+    "title": "通用 EQ",
+    "glyph": "",
+    "localizedTitles": {
+      "zh-CN": "通用 EQ",
+      "en-US": "Universal EQ"
+    }
+  },
+  "capabilities": [
+    "snapshot",
+    "offlineTest",
+    "model",
+    "node",
+    "start",
+    "stop",
+    "clear",
+    "update",
+    "validate",
+    "restore",
+    "syncScene",
+    "syncGeneric",
+    "conflict",
+    "host"
+  ],
+  "releaseEpoch": 1,
+  "hostIntegration": {
+    "entry": "host",
+    "initialize": true,
+    "operations": [
+      "audioBindingDisable",
+      "audioBindingRemove",
+      "deletePreset",
+      "eqForget",
+      "eqRealSave",
+      "eqRegister",
+      "eqSave",
+      "eqStart",
+      "eqStop",
+      "eqTemplateSave",
+      "savePreset",
+      "eqPreview",
+      "eqRuntime"
+    ],
+    "observeOperations": [
+      "open",
+      "snapshot",
+      "monitor",
+      "settings",
+      "pluginMode"
+    ],
+    "stateKeys": [
+      "eq",
+      "eqRealPrefs",
+      "presets",
+      "audioProfiles",
+      "eqTemplate",
+      "eqRuntime",
+      "eqNativeVersion",
+      "eqSchema",
+      "deviceProfiles",
+      "profileDevices",
+      "deviceProfileOverrides",
+      "profileRuntime",
+      "scenes",
+      "registeredAudioApps"
+    ],
+    "ownedStateKeys": [
+      "eq",
+      "eqRealPrefs",
+      "presets",
+      "audioProfiles",
+      "eqTemplate",
+      "eqRuntime",
+      "eqNativeVersion",
+      "eqSchema",
+      "registeredAudioApps"
+    ],
+    "settingsKeys": [
+      "eqEnabled"
+    ],
+    "transientStateKeys": [
+      "eqRuntime"
+    ],
+    "tickIntervalMs": 1000
+  },
+  "lifecycle": {
+    "startup": "hostStartup",
+    "stop": "hostStop",
+    "uninstall": "hostUninstall",
+    "shutdown": "hostShutdown"
+  },
+  "routeAliases": [
+    {
+      "route": "eq"
+    },
+    {
+      "route": "eq-settings",
+      "initial": {
+        "action": "settings"
+      }
+    }
+  ],
+  "profileCapabilities": {
+    "execution": "native",
+    "pendingState": "waitingAudio",
+    "editor": "profileEditor"
+  },
+  "pageContributions": [
+    {
+      "slot": "scene-detail",
+      "title": "EQ 绑定",
+      "entry": "bindings",
+      "height": 340
+    },
+    {
+      "slot": "device-actions",
+      "title": "打开通用 EQ",
+      "entry": "",
+      "kind": "audio"
+    }
+  ],
+  "deviceProjection": {
+    "statePath": [
+      "eqRuntime",
+      "outputs"
+    ],
+    "idPrefix": "audio-output:",
+    "kind": "audio",
+    "copyIdAs": "output"
+  },
+  "uninstallNotice": "将停止音频处理，清理 EQ 配置与场景绑定；共享虚拟音频驱动保留。",
+  "installNotice": "\n包含 FxSound 官方原版签名虚拟音频驱动安装组件；安装驱动需另行确认管理员授权，可能需重启。",
+  "uiFeatures": [
+    "navigate"
+  ]
+}

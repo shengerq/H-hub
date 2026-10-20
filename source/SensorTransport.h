@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include "MonitorProjection.h"
 #include <dxgi1_2.h>
 #include <map>
@@ -39,10 +39,9 @@ struct SensorTransport : MonitorProjection {
  }
  bool workerWrite(char const* data,DWORD size,DWORD& transferred){return workerIo(true,const_cast<char*>(data),size,transferred);}
  void cancelElevation(){if(elevationPipe){CancelIoEx(elevationPipe,nullptr);if(connecting){DWORD ignored{};GetOverlappedResult(elevationPipe,&elevationConnect,&ignored,TRUE);}CloseHandle(elevationPipe);elevationPipe=nullptr;}if(elevationEvent){CloseHandle(elevationEvent);elevationEvent=nullptr;}connecting=false;elevationConnect={};elevation.reset();}
- void stopSensors(bool resetBackoff=false){cancelElevation();if(input){DWORD n;workerWrite("quit\n",5,n);CloseHandle(input);input=nullptr;}if(worker)WaitForSingleObject(worker,250);if(job){CloseHandle(job);job=nullptr;}if(worker){CloseHandle(worker);worker=nullptr;}if(output){CloseHandle(output);output=nullptr;}elevatedTransport=false;pending=false;buffer.clear();sensorCache=nullptr;cache=nullptr;sensorTime=0;if(resetBackoff)startAttempt=0;}
- // Both ordinary and authorized readers stay initialized while the core is alive.
- // The helper blocks on its command pipe, so keeping it does not keep sampling.
- void pauseSensors(){cache=nullptr;}
+ void stopSensors(bool resetBackoff=false){cancelElevation();if(input){DWORD n;workerWrite("quit\n",5,n);CloseHandle(input);input=nullptr;}if(worker)WaitForSingleObject(worker,250);if(job){CloseHandle(job);job=nullptr;}if(worker){CloseHandle(worker);worker=nullptr;}if(output){CloseHandle(output);output=nullptr;}elevatedTransport=false;pending=false;std::string{}.swap(buffer);sensorCache=nullptr;cache=nullptr;sensorTime=sentTime=0;if(resetBackoff)startAttempt=0;}
+ // Pause releases the helper and sensor cache, rather than retaining an idle reader.
+ void pauseSensors(){stopSensors(true);}
  void startElevated(){
   if(elevation||(sensorCache&&flag(sensorCache,L"elevated")))return;
   autoElevationAttempted=true;
@@ -54,7 +53,7 @@ struct SensorTransport : MonitorProjection {
   elevationEvent=CreateEventW(nullptr,TRUE,FALSE,nullptr);if(!elevationEvent){auto error=GetLastError();cancelElevation();throw hresult_error(HRESULT_FROM_WIN32(error));}elevationConnect={};elevationConnect.hEvent=elevationEvent;
   if(ConnectNamedPipe(elevationPipe,&elevationConnect))SetEvent(elevationEvent);else{auto error=GetLastError();if(error==ERROR_IO_PENDING)connecting=true;else if(error==ERROR_PIPE_CONNECTED)SetEvent(elevationEvent);else{cancelElevation();throw hresult_error(HRESULT_FROM_WIN32(error));}}
   auto context=std::make_shared<Elevation>();elevation=context;elevationStarted=GetTickCount64();elevationError.clear();cache=nullptr;
-  auto exe=(binaryDir()/L"sensors"/L"Hhub.Sensors.exe").wstring();auto arguments=L"--pipe "+name+L" --parent "+std::to_wstring(GetCurrentProcessId());
+  auto exe=(binaryDir()/L"sensors"/L"Hhub.exe").wstring();auto arguments=L"--pipe "+name+L" --parent "+std::to_wstring(GetCurrentProcessId());
   try{std::thread([context,exe,arguments]{auto initialized=CoInitializeEx(nullptr,COINIT_APARTMENTTHREADED);SHELLEXECUTEINFOW launch{sizeof(launch)};launch.fMask=SEE_MASK_NOCLOSEPROCESS|SEE_MASK_FLAG_NO_UI;launch.lpVerb=L"runas";launch.lpFile=exe.c_str();launch.lpParameters=arguments.c_str();launch.nShow=SW_HIDE;BOOL ok=ShellExecuteExW(&launch);DWORD error=ok?0:GetLastError();{std::lock_guard lock(context->mutex);context->process=ok?launch.hProcess:nullptr;context->error=error;context->launched=GetTickCount64();context->finished=true;}if(SUCCEEDED(initialized))CoUninitialize();}).detach();}catch(...){cancelElevation();throw;}
  }
  void progressElevation(){
@@ -72,7 +71,7 @@ struct SensorTransport : MonitorProjection {
   // A complete sensor frame may exceed the default 4 KB anonymous-pipe buffer.
   if(!CreatePipe(&output,&childOut,&sa,1048576)){CloseHandle(childIn);CloseHandle(input);input=nullptr;return;}
   SetHandleInformation(input,HANDLE_FLAG_INHERIT,0);SetHandleInformation(output,HANDLE_FLAG_INHERIT,0);
-  auto exe=binaryDir()/L"sensors"/L"Hhub.Sensors.exe";std::wstring line=L"\""+exe.wstring()+L"\"";
+  auto exe=binaryDir()/L"sensors"/L"Hhub.exe";std::wstring line=L"\""+exe.wstring()+L"\"";
   STARTUPINFOW si{sizeof(si)};si.dwFlags=STARTF_USESTDHANDLES|STARTF_USESHOWWINDOW;si.wShowWindow=SW_HIDE;si.hStdInput=childIn;si.hStdOutput=childOut;
   si.hStdError=CreateFileW(L"NUL",GENERIC_WRITE,FILE_SHARE_READ|FILE_SHARE_WRITE,&sa,OPEN_EXISTING,0,nullptr);
   PROCESS_INFORMATION pi{};

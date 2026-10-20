@@ -1,0 +1,14 @@
+{
+  "displayName": "Hhub Audio",
+  "version": "1.0.0.0",
+  "hardwareId": "ROOT\\HHUBVAD",
+  "service": "HHUBVAD",
+  "binary": "hhubvad.sys",
+  "inf": "hhubvad.inf",
+  "catalog": "hhubvadntamd64.cat",
+  "waveReference": "HhubWave",
+  "topologyReference": "HhubTopology",
+  "productGuid": "8B6F317D-63E4-4E91-9D80-FA4D37A9725B",
+  "mediaCategoryGuid": "5A03CC71-9C61-4C93-B603-AD739D82B10E",
+  "upstreamCommit": "c78fc6d031d16bd0a5dbbdff4871cfb8715d343d"
+}

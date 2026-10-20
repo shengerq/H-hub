@@ -1,4 +1,4 @@
-﻿// Device identity, battery and visibility come from the original reader/plugins.
+// Device identity, battery and visibility come from the original reader/plugins.
 JsonObject homeDevice(std::wstring const& id){for(auto const& item:visibleDevices()){auto device=item.GetObject();if(str(device,L"id")==id)return device;}return JsonObject{};}
 std::wstring homeBattery(JsonObject device){
  auto value=device.GetNamedValue(L"battery",JsonValue::CreateNullValue());
@@ -36,7 +36,7 @@ void nativeDeviceMonitoring(){
  auto heroPatch=[this,name,kind,status,battery,profile,dot,details,artHost,artNote,previousArt]{
   auto id=selectedDetected();auto device=homeDevice(id);name.Text(deviceDisplayName(device));kind.Text(homeDeviceKind(device));status.Text(translated(str(device,L"status")));battery.Text(homeBattery(device));
   ToolTipService::SetToolTip(battery,box_value(str(device,L"batterySource")));profile.Text(str(device,L"connection")+L" · "+str(device,L"profile"));dot.Background(flag(device,L"connected")?brush(15,123,15):brush(120,120,120));details.IsEnabled(!homeSelectionBusy&&!id.empty());
-  if(*previousArt!=id){*previousArt=id;artHost.Children().Clear();Image art;art.Stretch(Stretch::Uniform);art.HorizontalAlignment(HorizontalAlignment::Stretch);art.VerticalAlignment(VerticalAlignment::Stretch);Microsoft::UI::Xaml::Automation::AutomationProperties::SetName(art,tr(L"当前设备外观：")+deviceDisplayName(device));artHost.Children().Append(art);loadDeviceArt(art,device);artNote.Text(id==L"rapoo-vt3pro"?tr(L"官方产品外观参考 · 白色"):matchedDevicePlugin(device)?tr(L"插件提供的产品外观"):tr(L"外观示意 · 非型号照片"));}
+  if(*previousArt!=id){*previousArt=id;artHost.Children().Clear();Image art;art.Stretch(Stretch::Uniform);art.HorizontalAlignment(HorizontalAlignment::Stretch);art.VerticalAlignment(VerticalAlignment::Stretch);Microsoft::UI::Xaml::Automation::AutomationProperties::SetName(art,tr(L"当前设备外观：")+deviceDisplayName(device));artHost.Children().Append(art);loadDeviceArt(art,device);artNote.Text(matchedDevicePlugin(device)?tr(L"插件提供的产品外观"):tr(L"外观示意 · 非型号照片"));}
  };heroPatch();deviceBindings.push_back(heroPatch);auto hero=card(heroBody,20);hero.MinHeight(180);workspace.Children().Append(hero);
  Grid shelf;shelf.RowSpacing(8);RowDefinition items;items.Height({1,GridUnitType::Star});shelf.RowDefinitions().Append(items);RowDefinition footer;footer.Height({0,GridUnitType::Auto});shelf.RowDefinitions().Append(footer);
  auto tiles=stack(false,6);ScrollViewer scroll;scroll.VerticalScrollBarVisibility(ScrollBarVisibility::Auto);scroll.HorizontalScrollBarVisibility(ScrollBarVisibility::Disabled);scroll.HorizontalScrollMode(ScrollMode::Disabled);scroll.Content(tiles);shelf.Children().Append(scroll);

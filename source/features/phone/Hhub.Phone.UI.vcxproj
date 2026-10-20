@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+ <ItemGroup Label="ProjectConfigurations"><ProjectConfiguration Include="Release|x64"><Configuration>Release</Configuration><Platform>x64</Platform></ProjectConfiguration></ItemGroup>
+ <PropertyGroup Label="Globals"><ProjectGuid>{0E155F92-CBC2-443E-B62C-3631608D5627}</ProjectGuid><Keyword>Win32Proj</Keyword><BaseIntermediateOutputPath>$(ProjectDir)obj\phone-module\</BaseIntermediateOutputPath><MSBuildProjectExtensionsPath>$(ProjectDir)obj\phone-module\</MSBuildProjectExtensionsPath><NuGetTargetMoniker>native,Version=v0.0</NuGetTargetMoniker><RootNamespace>HhubCore</RootNamespace><WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion></PropertyGroup>
+ <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+ <PropertyGroup Label="Configuration"><ConfigurationType>DynamicLibrary</ConfigurationType><UseDebugLibraries>false</UseDebugLibraries><PlatformToolset>v143</PlatformToolset><CharacterSet>Unicode</CharacterSet></PropertyGroup>
+ <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+ <PropertyGroup><UseWinUI>true</UseWinUI><WindowsPackageType>None</WindowsPackageType><AppxPackage>false</AppxPackage><EnableMsixTooling>false</EnableMsixTooling><WindowsAppSDKSelfContained>false</WindowsAppSDKSelfContained><WindowsAppSDKBootstrapInitialize>false</WindowsAppSDKBootstrapInitialize><WindowsAppSDKDeploymentManagerInitialize>false</WindowsAppSDKDeploymentManagerInitialize><DisableWindowsAppSDKMLAutoInitialize>true</DisableWindowsAppSDKMLAutoInitialize><CppWinRTEnabled>true</CppWinRTEnabled><CppWinRTGenerateWindowsMetadata>false</CppWinRTGenerateWindowsMetadata><OutDir>$(ProjectDir)out\</OutDir><IntDir>$(ProjectDir)build\phone-module\</IntDir><TargetName>Hhub.Phone.UI</TargetName></PropertyGroup>
+ <ItemDefinitionGroup><ClCompile><Optimization>MaxSpeed</Optimization><WarningLevel>Level3</WarningLevel><LanguageStandard>stdcpp20</LanguageStandard><ExceptionHandling>Sync</ExceptionHandling><RuntimeLibrary>MultiThreaded</RuntimeLibrary><AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions><PreprocessorDefinitions>UNICODE;_UNICODE;NOMINMAX;WIN32_LEAN_AND_MEAN;%(PreprocessorDefinitions)</PreprocessorDefinitions></ClCompile><Link><SubSystem>Windows</SubSystem><AdditionalDependencies>shlwapi.lib;windowsapp.lib;advapi32.lib;psapi.lib;shell32.lib;ole32.lib;%(AdditionalDependencies)</AdditionalDependencies></Link><Manifest><AdditionalManifestFiles>$(ProjectDir)app.manifest;%(AdditionalManifestFiles)</AdditionalManifestFiles></Manifest></ItemDefinitionGroup>
+ <ItemGroup><ClCompile Include="PluginModule.cpp" /><ClCompile Include="vendor\qrcodegen.cpp" /></ItemGroup>
+ <ItemGroup><ResourceCompile Include="Version.rc" /></ItemGroup>
+
+ <ItemGroup><PackageReference Include="Microsoft.Windows.CppWinRT" Version="3.0.260818.1" /><PackageReference Include="Microsoft.WindowsAppSDK" Version="1.8.260921001" /></ItemGroup>
+ <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+</Project>
+

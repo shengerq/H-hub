@@ -1,5 +1,6 @@
-﻿#include "Common.h"
+#include "Common.h"
 #include "NativePluginPage.h"
+#undef GetCurrentTime
 #include <winrt/Microsoft.UI.Xaml.h>
 #include <winrt/Microsoft.UI.Xaml.Controls.h>
 #include <winrt/Microsoft.UI.Xaml.XamlTypeInfo.h>
@@ -38,12 +39,13 @@ struct PluginApplication:ApplicationT<PluginApplication,Markup::IXamlMetadataPro
      else if(kind==L"request")reply.SetNamedValue(L"reply",nativeModule(owner).invoke(command.GetNamedObject(L"request")));
      else if(kind==L"window")put(reply,L"window",(double)(uintptr_t)hwnd);
      else if(kind==L"pageCommand"){auto done=std::make_shared<std::promise<void>>();auto future=done->get_future();auto request=command.GetNamedObject(L"request");queue.TryEnqueue([this,done,request]{try{if(page)page->command(request);done->set_value();}catch(...){done->set_exception(std::current_exception());}});future.get();}
-     else throw hresult_invalid_argument();put(reply,L"ok",true);
-    }catch(hresult_error const& e){put(reply,L"ok",false);put(reply,L"error",std::wstring(e.message()));}catch(...){put(reply,L"ok",false);put(reply,L"error",std::wstring(L"插件进程处理失败"));}if(!pluginPipeWrite(channel,reply))break;
+     else if(kind!=L"shutdown")throw hresult_invalid_argument();put(reply,L"ok",true);
+    }catch(hresult_error const& e){put(reply,L"ok",false);put(reply,L"error",std::wstring(e.message()));}catch(...){put(reply,L"ok",false);put(reply,L"error",std::wstring(L"插件进程处理失败"));}if(str(command,L"kind")==L"shutdown")break;if(!pluginPipeWrite(channel,reply))break;
    }
    CloseHandle(channel);channel=INVALID_HANDLE_VALUE;queue.TryEnqueue([this]{page.reset();nativeModule(owner).unload();window.Close();Exit();});
   });
  }
  ~PluginApplication(){if(channel!=INVALID_HANDLE_VALUE)CancelIoEx(channel,nullptr);if(server.joinable())server.join();}
 };
-int WINAPI wWinMain(HINSTANCE,HINSTANCE,PWSTR,int){try{winrt::init_apartment(winrt::apartment_type::single_threaded);nativeModuleLocal=true;int count{};auto args=CommandLineToArgvW(GetCommandLineW(),&count);if(!args||count!=5||std::wstring(args[1])!=L"--plugin-host")return 2;std::wstring id=args[2],mode=args[3],pipe=args[4];LocalFree(args);if(!validPluginId(id)||(mode!=L"page"&&mode!=L"service"))return 2;Application::Start([&](auto&&){winrt::make<PluginApplication>(id,mode,pipe);});return 0;}catch(...){return 1;}}
+#include "PluginServiceHost.inc"
+int WINAPI wWinMain(HINSTANCE,HINSTANCE,PWSTR,int){try{winrt::init_apartment(winrt::apartment_type::single_threaded);nativeModuleLocal=true;int count{};auto args=CommandLineToArgvW(GetCommandLineW(),&count);if(!args||count!=5||std::wstring(args[1])!=L"--plugin-host")return 2;std::wstring id=args[2],mode=args[3],pipe=args[4];LocalFree(args);if(!validPluginId(id)||(mode!=L"page"&&mode!=L"service"))return 2;if(mode==L"service")return runPluginService(id,pipe);Application::Start([&](auto&&){winrt::make<PluginApplication>(id,mode,pipe);});return 0;}catch(...){return 1;}}

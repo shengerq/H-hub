@@ -1,4 +1,4 @@
-﻿// Trusted local homepage. Only the projected display state crosses this bridge.
+// Trusted local homepage. Only the projected display state crosses this bridge.
 WebView2 homeView{nullptr};
 bool homeReady=false;
 std::wstring lastHomeMessage;
@@ -13,7 +13,7 @@ std::wstring homeArt(JsonObject device){
  auto signature=std::hash<std::wstring>{}(html+kind);auto cached=homeArtCache.find(id);if(cached!=homeArtCache.end()&&cached->second.first==signature)return cached->second.second;
  std::wstring art;auto start=html.find(L"data:image/png;base64,");
  if(start!=std::wstring::npos){auto end=start+22;while(end<html.size()&&(iswalnum(html[end])||html[end]==L'+'||html[end]==L'/'||html[end]==L'='))++end;art=html.substr(start,end-start);}
- else art=L"https://assets.hhub.local/"+std::wstring(id==L"rapoo-vt3pro"?L"vt3pro.png":kind==L"mouse"?L"mouse.svg":kind==L"keyboard"?L"keyboard.svg":kind==L"gamepad"?L"gamepad.svg":L"headset.svg");
+ else art=L"https://assets.hhub.local/"+std::wstring(kind==L"mouse"?L"mouse.svg":kind==L"keyboard"?L"keyboard.svg":kind==L"gamepad"?L"gamepad.svg":L"headset.svg");
  homeArtCache[id]={signature,art};return art;
 }
 
@@ -33,7 +33,7 @@ JsonObject homeWebState(bool available=true){
  for(auto const& v:visibleDevices()){
   auto d=v.GetObject();JsonObject projected;auto id=str(d,L"id"),kind=str(d,L"kind");liveIds.push_back(id);put(projected,L"id",id);put(projected,L"name",deviceDisplayName(d));put(projected,L"status",str(d,L"status"));put(projected,L"connected",flag(d,L"connected"));
   auto battery=d.HasKey(L"battery")?L"电量 "+digits(num(d,L"battery"))+L"%"+(flag(d,L"lowBattery")?L" · 低电量":L""):d.HasKey(L"batteryLevel")?L"电量等级 "+str(d,L"batteryLevel"):L"电量不可用";put(projected,L"battery",battery);put(projected,L"tileStatus",d.HasKey(L"battery")?battery:str(d,L"status",L"状态不可用"));
-  put(projected,L"kindLabel",std::wstring(kind==L"mouse"?L"鼠标 / 鼠标接收器":kind==L"keyboard"?L"键盘 / 复合输入设备":kind==L"gamepad"?L"手柄接口":kind==L"audio"?L"音频端点":L"Windows 外设"));put(projected,L"profile",str(d,L"connection")+L"  ·  "+str(d,L"profile"));put(projected,L"art",homeArt(d));put(projected,L"artNote",std::wstring(id==L"rapoo-vt3pro"?L"官方产品外观参考 · 白色":matchedDevicePlugin(d)?L"雷柏 VT3S MAX · 原厂产品图":L"外观示意 · 非型号照片"));devices.Append(projected);
+  put(projected,L"kindLabel",std::wstring(kind==L"mouse"?L"鼠标 / 鼠标接收器":kind==L"keyboard"?L"键盘 / 复合输入设备":kind==L"gamepad"?L"手柄接口":kind==L"audio"?L"音频端点":L"Windows 外设"));put(projected,L"profile",str(d,L"connection")+L"  ·  "+str(d,L"profile"));put(projected,L"art",homeArt(d));put(projected,L"artNote",std::wstring(matchedDevicePlugin(d)?L"插件提供的产品外观":L"外观示意 · 非型号照片"));devices.Append(projected);
  }
  for(auto it=homeArtCache.begin();it!=homeArtCache.end();)if(std::find(liveIds.begin(),liveIds.end(),it->first)==liveIds.end())it=homeArtCache.erase(it);else ++it;
  std::wstring scene=L"当前场景：暂无场景";try{auto s=find(state.GetNamedArray(L"scenes"),str(state,L"currentScene"));scene=L"当前场景："+str(s,L"name")+(flag(state,L"sceneLocked")?L" · 手动锁定":L" · 自动规则");}catch(...){}

@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include "Common.h"
 #include <tlhelp32.h>
 #include <map>
@@ -31,12 +31,7 @@ struct Applications {
  }
 };
 struct Lifecycle {
- static bool startup(){HKEY key{};if(RegOpenKeyExW(HKEY_CURRENT_USER,L"Software\\Microsoft\\Windows\\CurrentVersion\\Run",0,KEY_QUERY_VALUE,&key)!=ERROR_SUCCESS)return false;wchar_t data[32768]{};DWORD size=sizeof(data),type{};auto ok=RegQueryValueExW(key,L"Hhub",nullptr,&type,(BYTE*)data,&size)==ERROR_SUCCESS&&type==REG_SZ;RegCloseKey(key);return ok&&std::wstring(data).find((binaryDir()/L"Hhub.Core.exe").wstring())!=std::wstring::npos;}
- static void startup(bool enabled){HKEY key{};auto status=RegCreateKeyExW(HKEY_CURRENT_USER,L"Software\\Microsoft\\Windows\\CurrentVersion\\Run",0,nullptr,0,KEY_SET_VALUE,nullptr,&key,nullptr);if(status!=ERROR_SUCCESS)throw hresult_error(HRESULT_FROM_WIN32(status));if(enabled){auto command=L"\""+(binaryDir()/L"Hhub.Core.exe").wstring()+L"\"";status=RegSetValueExW(key,L"Hhub",0,REG_SZ,(BYTE*)command.c_str(),(DWORD)((command.size()+1)*sizeof(wchar_t)));}else{status=RegDeleteValueW(key,L"Hhub");if(status==ERROR_FILE_NOT_FOUND)status=ERROR_SUCCESS;}RegCloseKey(key);if(status!=ERROR_SUCCESS)throw hresult_error(HRESULT_FROM_WIN32(status));}
-};
-// Windows page and execution logic are supplied by the installed module.
-struct WindowsWorker {
- static JsonObject run(std::wstring operation,JsonObject body={},bool elevate=false){auto& module=nativeModule(L"windows");module.load(L"windows");JsonObject request;put(request,L"op",std::wstring(L"worker"));put(request,L"operation",operation);put(request,L"elevate",elevate);request.SetNamedValue(L"body",body);return module.invoke(request).GetNamedObject(L"data");}
- static void uninstall(){auto& module=nativeModule(L"windows");if(!module.load(L"windows",false,true))return;JsonObject request;put(request,L"op",std::wstring(L"cleanup"));module.invoke(request);module.unload();if(module.library)throw hresult_error(E_PENDING,L"插件操作尚未结束");}
+ static bool startup(){HKEY key{};if(RegOpenKeyExW(HKEY_CURRENT_USER,L"Software\\Microsoft\\Windows\\CurrentVersion\\Run",0,KEY_QUERY_VALUE,&key)!=ERROR_SUCCESS)return false;wchar_t data[32768]{};DWORD size=sizeof(data),type{};auto ok=RegQueryValueExW(key,L"Hhub",nullptr,&type,(BYTE*)data,&size)==ERROR_SUCCESS&&type==REG_SZ;RegCloseKey(key);return ok&&std::wstring(data).find((binaryDir()/L"core"/L"Hhub.exe").wstring())!=std::wstring::npos;}
+ static void startup(bool enabled){HKEY key{};auto status=RegCreateKeyExW(HKEY_CURRENT_USER,L"Software\\Microsoft\\Windows\\CurrentVersion\\Run",0,nullptr,0,KEY_SET_VALUE,nullptr,&key,nullptr);if(status!=ERROR_SUCCESS)throw hresult_error(HRESULT_FROM_WIN32(status));if(enabled){auto command=L"\""+(binaryDir()/L"core"/L"Hhub.exe").wstring()+L"\"";status=RegSetValueExW(key,L"Hhub",0,REG_SZ,(BYTE*)command.c_str(),(DWORD)((command.size()+1)*sizeof(wchar_t)));}else{status=RegDeleteValueW(key,L"Hhub");if(status==ERROR_FILE_NOT_FOUND)status=ERROR_SUCCESS;}RegCloseKey(key);if(status!=ERROR_SUCCESS)throw hresult_error(HRESULT_FROM_WIN32(status));}
 };
 }

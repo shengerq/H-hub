@@ -1,5 +1,16 @@
-﻿param([string]$InstanceSuffix='', [string]$WindowProperty='Hhub.UI.MainWindow', [string]$ApplicationDirectory)
+﻿param([string]$InstanceSuffix='', [string]$WindowProperty='Hhub.UI.MainWindow', [string]$ApplicationDirectory, [string]$LogPath=(Join-Path $env:TEMP 'Hhub-prepare-upgrade.log'), [switch]$StopOnly)
 $ErrorActionPreference='Stop'
+function Write-UpgradeLog([string]$Message) {
+ [void][IO.Directory]::CreateDirectory([IO.Path]::GetDirectoryName([IO.Path]::GetFullPath($LogPath)))
+ [IO.File]::AppendAllText($LogPath,([DateTime]::Now.ToString('s')+' '+$Message+[Environment]::NewLine),[Text.UTF8Encoding]::new($false))
+}
+trap {
+ try { Write-UpgradeLog ('FAILED: '+$_.Exception.Message+' at '+$_.ScriptStackTrace) } catch {}
+ Write-Error -Message $_.Exception.Message -ErrorAction Continue
+ exit 1
+}
+Write-UpgradeLog 'Starting profile preparation'
+
 # Stop the current user's existing instance even when it runs from a portable
 # or development directory. Keep plugin installation records and preferences.
 Add-Type @'
@@ -30,7 +41,7 @@ foreach($taskWindow in $taskWindows){
 $taskPipe='HhubPrototype.v1.'+[Security.Principal.WindowsIdentity]::GetCurrent().User.Value+$InstanceSuffix
 $taskClient=[IO.Pipes.NamedPipeClientStream]::new('.',$taskPipe,[IO.Pipes.PipeDirection]::InOut)
 try {
- try{$taskClient.Connect(1000)}catch [TimeoutException]{exit 0}
+ try{$taskClient.Connect(2000)}catch [TimeoutException]{Write-UpgradeLog 'No running core; existing profile left intact'; exit 0}
  $taskPayload=[Text.Encoding]::UTF8.GetBytes('{"op":"quit","body":{}}')
  $taskPrefix=[BitConverter]::GetBytes([int]$taskPayload.Length)
  $taskClient.Write($taskPrefix,0,4);$taskClient.Write($taskPayload,0,$taskPayload.Length);$taskClient.Flush()
@@ -49,17 +60,39 @@ try {
  $taskBytes=New-Object byte[] $taskSize;Read-Exact $taskBytes
  $taskReply=[Text.Encoding]::UTF8.GetString($taskBytes)|ConvertFrom-Json
  $taskProcess=Get-Process -Id ([int]$taskReply.state.corePid) -ErrorAction SilentlyContinue
- $taskPreviousApp=if($taskProcess -and $taskProcess.ProcessName -eq 'Hhub.Core'){Split-Path -Parent $taskProcess.Path}else{$null}
+ $taskIsCore=$taskProcess -and ($taskProcess.ProcessName -eq 'Hhub.Core' -or ($taskProcess.ProcessName -eq 'Hhub' -and (Split-Path -Leaf (Split-Path -Parent $taskProcess.Path)) -eq 'core'))
+ $taskPreviousApp=if($taskIsCore){$folder=Split-Path -Parent $taskProcess.Path;if((Split-Path -Leaf $folder) -eq 'core'){Split-Path -Parent $folder}else{$folder}}else{$null}
  $taskClient.WriteByte(1);$taskClient.Flush()
  if(-not $taskReply.ok){throw 'Hhub 核心拒绝退出。'}
- if($taskProcess -and $taskProcess.ProcessName -eq 'Hhub.Core' -and -not $taskProcess.WaitForExit(10000)){throw 'Hhub 核心尚未退出。'}
+ if($taskIsCore -and -not $taskProcess.WaitForExit(10000)){throw 'Hhub 核心尚未退出。'}
+ Write-UpgradeLog 'Core and UI stopped'
+ if($StopOnly){Write-UpgradeLog 'Stop-only completed'; return}
  # Copy verified component files before moving the live profile between roots.
  $taskSourceData=[string]$taskReply.profileDirectory
- $taskProfile=if($InstanceSuffix -eq '.PhoneTests'){'HhubPhoneTests'}else{'HhubPrototype'}
+ $taskProfile='HhubPrototype'
  $taskTargetData=Join-Path $env:LOCALAPPDATA $taskProfile
+ # The core has already saved its state during quit. Do not replace an existing
+ # profile with a transient snapshot when installation uses that same profile.
+ if(-not $taskSourceData -or [IO.Path]::GetFullPath($taskSourceData) -eq [IO.Path]::GetFullPath($taskTargetData)){
+  Write-UpgradeLog 'Same profile (or legacy core without profile path); no migration required'; return
+ }
+ Write-UpgradeLog ('Migrating profile from '+$taskSourceData+' to '+$taskTargetData)
+ function Copy-MigratedFile([string]$From,[string]$To) {
+  [void][IO.Directory]::CreateDirectory([IO.Path]::GetDirectoryName($To))
+  if([IO.File]::Exists($To)){
+   if((Get-FileHash -LiteralPath $From).Hash -eq (Get-FileHash -LiteralPath $To).Hash){return}
+   $backup=Join-Path $taskTargetData ('backups/upgrade-'+$taskBackupId+'/'+$To.Substring($taskTargetData.Length).TrimStart('\','/'))
+   [void][IO.Directory]::CreateDirectory([IO.Path]::GetDirectoryName($backup))
+   [IO.File]::Copy($To,$backup,$false)
+  }
+  $temporary=$To+'.migration-'+[guid]::NewGuid().ToString('N')
+  [IO.File]::Copy($From,$temporary,$false)
+  if([IO.File]::Exists($To)){[IO.File]::Replace($temporary,$To,$backup,$true)}else{[IO.File]::Move($temporary,$To)}
+ }
+ $taskBackupId=[guid]::NewGuid().ToString('N')
  if($taskSourceData -and [IO.Path]::GetFullPath($taskSourceData) -ne [IO.Path]::GetFullPath($taskTargetData)){
   foreach($taskPlugin in $taskReply.state.plugins){
-   if(-not $taskPlugin.installed){continue}
+   if(-not $taskPlugin.installed -or $taskPlugin.builtin -or $taskPlugin.id -in @('windows','eq','phone')){continue}
    if($taskPlugin.id -notmatch '^[a-z0-9][a-z0-9._-]{0,79}$' -or $taskPlugin.id.Contains('..') -or $taskPlugin.id.EndsWith('.')){throw 'Invalid plugin ID'}
    foreach($taskAsset in $taskPlugin.nativeAssets){
     if([string]::IsNullOrEmpty($taskAsset.path) -or $taskAsset.path -match '(^/|\\|:|(^|/)\.\.?(/|$)|[<>"|?*]|[. ](/|$))' -or $taskAsset.sha256 -notmatch '^[0-9a-f]{64}$'){throw 'Invalid native component metadata'}
@@ -67,28 +100,50 @@ try {
     $taskTo=Join-Path (Join-Path (Join-Path $taskTargetData 'native-components') $taskPlugin.id) $taskAsset.path
     if(-not [IO.File]::Exists($taskFrom)){throw 'Installed native component is missing'}
     if((Get-Item -LiteralPath $taskFrom).Length -gt 4194304 -or (Get-FileHash -LiteralPath $taskFrom -Algorithm SHA256).Hash -ne $taskAsset.sha256){throw 'Installed native component hash mismatch'}
-    if(-not [IO.File]::Exists($taskTo)){
-     [void][IO.Directory]::CreateDirectory([IO.Path]::GetDirectoryName($taskTo));[IO.File]::Copy($taskFrom,$taskTo,$false)
-    }elseif((Get-FileHash -LiteralPath $taskTo -Algorithm SHA256).Hash -ne $taskAsset.sha256){throw 'Destination has a different native component; migration stopped'}
+    Copy-MigratedFile $taskFrom $taskTo
    }
   }
  }
- if($taskSourceData -and [IO.Path]::GetFullPath($taskSourceData) -ne [IO.Path]::GetFullPath($taskTargetData) -and @($taskReply.state.plugins|Where-Object {$_.id -eq 'windows' -and $_.installed}).Count){
-  $taskUndoFrom=Join-Path $taskSourceData 'windows-settings-undo.json';$taskUndoTo=Join-Path $taskTargetData 'windows-settings-undo.json'
-  if([IO.File]::Exists($taskUndoFrom)){
-   if((Get-Item -LiteralPath $taskUndoFrom).Length -gt 1048576){throw 'Windows rollback record is too large'}
-   $null=Get-Content -LiteralPath $taskUndoFrom -Raw -Encoding UTF8|ConvertFrom-Json
-   if([IO.File]::Exists($taskUndoTo)){if((Get-FileHash -LiteralPath $taskUndoFrom).Hash -ne (Get-FileHash -LiteralPath $taskUndoTo).Hash){throw 'Destination has a different Windows rollback record; migration stopped'}}else{[void][IO.Directory]::CreateDirectory($taskTargetData);[IO.File]::Copy($taskUndoFrom,$taskUndoTo,$false)}
+ if($taskSourceData -and [IO.Path]::GetFullPath($taskSourceData) -ne [IO.Path]::GetFullPath($taskTargetData)){
+  foreach($taskPlugin in $taskReply.state.plugins){
+   if(-not $taskPlugin.installed){continue}
+   foreach($taskFile in $taskPlugin.storage.migrationFiles){
+    if([string]::IsNullOrEmpty($taskFile.path) -or $taskFile.path -match '(^/|\\|:|(^|/)\.\.?(/|$)|[<>"|?*]|[. ](/|$))'){throw 'Invalid plugin storage path'}
+    $taskMaximum=[Math]::Min(4194304,[Math]::Max(1,[int64]$taskFile.maxBytes))
+    $taskFrom=Join-Path $taskSourceData $taskFile.path;$taskTo=Join-Path $taskTargetData $taskFile.path
+    if(-not [IO.File]::Exists($taskFrom)){continue}
+    if((Get-Item -LiteralPath $taskFrom).Length -gt $taskMaximum){throw 'Plugin storage file exceeds declared size'}
+    if($taskFile.format -eq 'json'){$null=Get-Content -LiteralPath $taskFrom -Raw -Encoding UTF8|ConvertFrom-Json}
+    Copy-MigratedFile $taskFrom $taskTo
+   }
   }
  }
 
+ # Phone certificates and authorization records belong to the user profile,
+ # not to the replaceable built-in phone module.
+ $taskPhone=Join-Path $taskSourceData 'phone'
+ if(Test-Path -LiteralPath $taskPhone){
+  function Copy-PhoneDirectory([string]$Directory){
+   $item=Get-Item -LiteralPath $Directory -Force
+   if($item.Attributes -band [IO.FileAttributes]::ReparsePoint){throw 'Phone data contains a redirected directory'}
+   foreach($entry in Get-ChildItem -LiteralPath $Directory -Force){
+    if($entry.Attributes -band [IO.FileAttributes]::ReparsePoint){throw 'Phone data contains a link'}
+    if($entry.PSIsContainer){Copy-PhoneDirectory $entry.FullName}
+    else{
+     if($entry.Length -gt 4194304){throw 'Phone profile file exceeds maximum size'}
+     Copy-MigratedFile $entry.FullName (Join-Path $taskTargetData $entry.FullName.Substring($taskSourceData.Length).TrimStart('\','/'))
+    }
+   }
+  }
+  Copy-PhoneDirectory $taskPhone
+ }
  # A portable copy can have redirected AppData. Preserve its live preferences
  # in the installer's profile, with an atomic replacement and a local backup.
  $taskState=$taskReply.state
  if($taskState.schema -ne 1 -or -not $taskState.settings -or $null -eq $taskState.plugins){throw 'Hhub 配置格式无效，安装已停止。'}
  foreach($taskKey in @('phoneDeviceControls','deviceProfileOverrides','profileRuntime','monitor','detected','windowsSettings','eqRuntime','phoneRuntime','applications','updates')){$taskState.PSObject.Properties.Remove($taskKey)}
  foreach($taskPlugin in $taskState.plugins){$taskPlugin|Add-Member -NotePropertyName runtime -NotePropertyValue 'stopped' -Force;$taskPlugin|Add-Member -NotePropertyName leaseUntil -NotePropertyValue 0 -Force}
- $taskProfile=if($InstanceSuffix -eq '.PhoneTests'){'HhubPhoneTests'}else{'HhubPrototype'}
+ $taskProfile='HhubPrototype'
  $taskData=Join-Path $env:LOCALAPPDATA $taskProfile
  [void][IO.Directory]::CreateDirectory($taskData)
  $taskFile=Join-Path $taskData 'state.json'
@@ -98,25 +153,6 @@ try {
   $taskBackups=Join-Path $taskData 'backups';[void][IO.Directory]::CreateDirectory($taskBackups)
   [IO.File]::Replace($taskTemporary,$taskFile,(Join-Path $taskBackups ('before-base-install-'+[guid]::NewGuid().ToString('N')+'.json')),$true)
  }else{[IO.File]::Move($taskTemporary,$taskFile)}
- # Carry forward only components of plugins the user already installed.
- # Setup does not bundle or download these optional components.
- if($ApplicationDirectory -and $taskPreviousApp){
-  $taskDestination=[IO.Path]::GetFullPath($ApplicationDirectory)
-  foreach($taskPlugin in $taskState.plugins){
-   if(-not $taskPlugin.installed){continue}
-   $taskComponents=switch($taskPlugin.id){
-    'windows' {@()}
-    'phone' {@('Hhub.Phone.exe','phone-web\app.js','phone-web\index.html','phone-web\style.css')}
-    'eq' {@()}
-    default {@()}
-   }
-   foreach($taskRelative in $taskComponents){
-    $taskFrom=Join-Path $taskPreviousApp $taskRelative;$taskTo=Join-Path $taskDestination $taskRelative
-    if([IO.File]::Exists($taskFrom) -and -not [IO.File]::Exists($taskTo)){
-     [void][IO.Directory]::CreateDirectory([IO.Path]::GetDirectoryName($taskTo));[IO.File]::Copy($taskFrom,$taskTo,$false)
-    }
-   }
-  }
- }
+ Write-UpgradeLog 'Profile migration completed; previous files saved under backups'
 } finally {$taskClient.Dispose()}
 

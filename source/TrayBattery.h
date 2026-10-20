@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include "Common.h"
 #include <commctrl.h>
 #include <set>
@@ -8,7 +8,7 @@ namespace hub {
 inline std::wstring trayDeviceName(JsonObject device,JsonArray plugins){
  for(auto const& value:plugins){
   auto plugin=value.GetObject();
-  if(!flag(plugin,L"installed")||str(plugin,L"mode")==L"disabled"||str(plugin,L"id")==L"hhub.developer-tools")continue;
+  if(!flag(plugin,L"installed")||str(plugin,L"mode")==L"disabled")continue;
   for(auto const& target:plugin.GetNamedArray(L"hidTargets",JsonArray{})){
    auto match=target.GetObject();
    if(num(device,L"vid",-1)!=num(match,L"vid",-2)||num(device,L"pid",-1)!=num(match,L"pid",-2))continue;

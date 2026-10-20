@@ -1,4 +1,4 @@
-﻿#pragma comment(lib,"bcrypt.lib")
+#pragma comment(lib,"bcrypt.lib")
 #pragma comment(lib,"crypt32.lib")
 // Installed manifests provide component names and hashes. No per-plugin host pins.
 struct NativeAssetDefinition{std::wstring name,hash;};
@@ -23,7 +23,7 @@ struct NativeAssetTransaction{
 };
 inline std::unique_ptr<NativeAssetTransaction> installNativePluginAssets(JsonObject plugin,std::filesystem::path root={}){
  if(!plugin.HasKey(L"nativeAssets"))return {};
- if(!hostVersionSupports(str(plugin.GetNamedObject(L"requiredHost",JsonObject{}),L"minimumVersion"),(unsigned)num(plugin.GetNamedObject(L"requiredHost",JsonObject{}),L"releaseEpoch")))throw hresult_invalid_argument(L"插件需要更新版本的主程序");auto id=str(plugin,L"id");auto assets=plugin.GetNamedArray(L"nativeAssets");auto api=str(plugin.GetNamedObject(L"requiredHost",JsonObject{}),L"apiVersion");if(!validPluginId(id)||!assets.Size()||assets.Size()>64||(api!=L"1.1"&&api!=L"1.2"&&api!=L"1.3"))throw hresult_invalid_argument(L"原生插件组件数量或宿主契约无效");
+ if(!hostVersionSupports(str(plugin.GetNamedObject(L"requiredHost",JsonObject{}),L"minimumVersion"),(unsigned)num(plugin.GetNamedObject(L"requiredHost",JsonObject{}),L"releaseEpoch")))throw hresult_invalid_argument(L"插件需要更新版本的主程序");auto id=str(plugin,L"id");auto assets=plugin.GetNamedArray(L"nativeAssets");auto api=str(plugin.GetNamedObject(L"requiredHost",JsonObject{}),L"apiVersion");if(!validPluginId(id)||!assets.Size()||assets.Size()>64||(api!=L"1.1"&&api!=L"1.2"&&api!=L"1.3"&&api!=L"1.4"))throw hresult_invalid_argument(L"原生插件组件数量或宿主契约无效");
  struct Decoded{std::wstring name;std::vector<unsigned char> bytes;};std::vector<Decoded> decoded;JsonArray metadata;size_t total=0;
  for(auto const& value:assets){auto item=value.GetObject();auto name=str(item,L"path"),hash=str(item,L"sha256"),data=str(item,L"data");auto folded=name;std::transform(folded.begin(),folded.end(),folded.begin(),towlower);if(!validAssetName(name)||hash.size()!=64||!std::all_of(hash.begin(),hash.end(),[](wchar_t c){return (c>=L'0'&&c<=L'9')||(c>=L'a'&&c<=L'f');})||std::any_of(decoded.begin(),decoded.end(),[&](auto const& d){auto n=d.name;std::transform(n.begin(),n.end(),n.begin(),towlower);return n==folded;}))throw hresult_invalid_argument(L"插件组件路径、摘要或重复项无效");
   if(data.empty()||data.size()>6*1024*1024||str(item,L"encoding")!=L"base64")throw hresult_invalid_argument(L"插件组件编码或大小无效");DWORD size{};if(!CryptStringToBinaryW(data.c_str(),(DWORD)data.size(),CRYPT_STRING_BASE64|CRYPT_STRING_STRICT,nullptr,&size,nullptr,nullptr)||size>4*1024*1024||(total+=size)>8*1024*1024)throw hresult_invalid_argument(L"插件组件无法解码");Decoded file{name,std::vector<unsigned char>(size)};if(!CryptStringToBinaryW(data.c_str(),(DWORD)data.size(),CRYPT_STRING_BASE64|CRYPT_STRING_STRICT,file.bytes.data(),&size,nullptr,nullptr)||nativeAssetDigest(file.bytes)!=hash)throw hresult_invalid_argument(L"插件组件 SHA-256 校验失败");

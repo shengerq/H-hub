@@ -1,5 +1,5 @@
-﻿std::wstring profileExtensionRevision;
-bool hasScenePluginProfiles(){try{if(flag(hub::call(L"deviceProfileWorkerState"),L"registered"))return true;}catch(...){}for(auto const& v:state.GetNamedArray(L"deviceProfiles",JsonArray{})){auto p=v.GetObject();if(!p.HasKey(L"payload")||str(p,L"plugin").empty()||str(p,L"provider")==L"generic")continue;for(auto const& scene:state.GetNamedArray(L"scenes"))for(auto const& binding:scene.GetObject().GetNamedArray(L"bindings",JsonArray{}))if(str(binding.GetObject(),L"profile")==str(p,L"id"))return true;}return false;}
+std::wstring profileExtensionRevision;
+bool hasScenePluginProfiles(){try{if(flag(hub::call(L"deviceProfileWorkerState"),L"registered"))return true;}catch(...){}for(auto const& v:state.GetNamedArray(L"deviceProfiles",JsonArray{})){auto p=v.GetObject();if(!p.HasKey(L"payload")||str(p,L"plugin").empty()||nativeProfileProvider(state,p))continue;for(auto const& scene:state.GetNamedArray(L"scenes"))for(auto const& binding:scene.GetObject().GetNamedArray(L"bindings",JsonArray{}))if(str(binding.GetObject(),L"profile")==str(p,L"id"))return true;}return false;}
 // Background WebViews use the same reviewed offline plugin and HID permission
 // boundary. Their controls are off-screen and never exposed as user pages.
 bool validProfileWorker(std::wstring const& id,WebView2 view){auto found=profileWorkers.find(id);return found!=profileWorkers.end()&&found->second==view;}

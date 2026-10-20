@@ -1,5 +1,5 @@
-﻿#pragma once
-#include "HidProbe.h"
+#pragma once
+#include "HidTransaction.h"
 namespace hub {
 inline void validatePluginHidRequest(JsonObject plugin,JsonObject request){
  if(!flag(plugin,L"installed")||flag(plugin,L"forceStopped")||str(plugin,L"mode")==L"disabled")throw hresult_error(E_ACCESSDENIED,L"设备插件尚未启用");

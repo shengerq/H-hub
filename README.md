@@ -1,32 +1,31 @@
-# Hhub 1.0
+# H hub 1.0 集成功能版 R3
 
-Windows 11 x64 原生设备控制中心，使用 WinUI 3 / C++/WinRT。
+基于重构前旧版的 Windows 11 x64 原生设备控制中心，使用 WinUI 3 / C++/WinRT。
 
-## 下载
+## 下载与升级
 
-[下载安装包](https://github.com/shengerq/H-hub/releases/latest)。基础安装包只包含主体、运行时、系统与设备监测、场景配置和插件管理。
+[下载 R3 安装包](https://github.com/shengerq/H-hub/releases/tag/v1.0-integrated-r3)。可覆盖安装旧版，保留配置与插件，更新原快捷方式和开机启动入口。已有 1.0 用户需手动安装本次修订版。
 
-## 两个官方插件库
+安装包默认提供 EQ 驱动安装/修复，设备显示名称设为 **H hub Audio**。驱动安装需要管理员授权；本次虚拟机验证跳过该任务，实际驱动安装、改名与音频效果仍需硬件验证。
 
-- [外设插件库](https://github.com/shengerq/H-hub-plugins)：鼠标、键盘等外设插件及开发测试工具。
-- [应用插件库](https://github.com/shengerq/H-hub-app-plugins)：手机遥控、通用 EQ、Windows 管理，当前均为 **1.0**。
+## 功能与资源管理
 
-插件市场默认注册两个库，并将所有已启用来源统一按鼠标、键盘、耳机、手柄、应用、其他分类；升级保留用户自定义源。
+- Windows 设置、耳机 EQ、手机遥控随应用提供，页面共用主界面。手机遥控采用左侧二维码、右侧详细信息布局。
+- 外设操控由外设插件执行，主程序保留通用传输和配置调度。市场支持[外设插件库](https://github.com/shengerq/H-hub-plugins)和[应用插件库](https://github.com/shengerq/H-hub-app-plugins)，保留自定义来源。
+- 市场通过分页浏览，分页栏位于底部，按钮文字居中，页面不整体上下滚动。
+- 传感器列表按可见范围创建控件。离开监测页、最小化或关闭界面后停止采集辅助程序，释放采样缓存。
+- 卸载时可选择保留插件和个人数据，默认保留；取消勾选后需确认清理。
 
-## 源码边界
+主界面、核心、传感器使用统一产品图标和应用标识，在任务管理器中归入 H hub。进程归组不代表合并为单个进程。三个内置功能不再分别启动页面宿主；外设插件继续隔离执行。
 
-主程序保留系统监测、设备监测、场景切换、插件市场及管理。应用插件通过通用接口提供页面和后台；宿主负责加载、监测和强制停止。手机、EQ、Windows 的页面、算法、预设、后台、手机客户端及音频驱动源码均位于应用插件库，不在本仓库中构建或打包。
+## 验证范围
 
-`source/` 是主体与通用插件接口；`driver/pawnio/` 是原生硬件监测所需依赖；`installer/` 是基础安装器；`updates/stable.json` 提供正式安装包地址与 SHA-256。设备契约、Unicode 页面加载和可选虚拟设备测试仍保留。
+已使用实际安装目录验证覆盖安装、功能页面、市场布局、辅助程序生命周期以及默认保留数据的实际卸载与重装。内存结果仅来自虚拟机，同环境下三个功能页工作集有所下降，首页未见明显下降；不能推算物理机占用或承诺真机上限。
 
-## 构建
+## 源码与构建
 
-Windows 11 x64、Visual Studio 2022 C++ Build Tools 与 Windows SDK，使用 `source/build.ps1` 构建，再通过 `source/Stage-BaseRelease.ps1` 准备发行目录。NuGet 依赖按项目文件恢复。传感器依赖和官方 PawnIO 安装器由原有获取流程准备。
+`source/` 为主程序，`source/features/` 为三项内置功能及所需第三方源码、许可和签名驱动载荷，`installer/` 为安装器与升级、卸载脚本。`updates/stable.json` 保存安装包下载地址和 SHA-256。
 
-三个应用插件分别在应用库的 `plugins/phone`、`plugins/eq`、`plugins/windows` 内执行 `build.ps1`，不依赖本仓库源码。
+构建与验证步骤见 [旧版集成说明](INTEGRATED-LEGACY.md)。需要 Windows 11 x64、Visual Studio C++ Build Tools、Windows SDK、NuGet 依赖与完整运行时资产。安装包使用 `installer/Build-Installer.ps1` 和 `installer/Hhub.Integrated.iss` 构建。
 
-## 版本统一
-
-本次主体和三个应用插件统一为 1.0。旧版用户首次需要手动安装新的基础包；安装器保留已有配置与已安装插件，应用插件可从新的官方库更新。新更新清单使用发行代际区分本次版本重置。
-
-许可证见 LICENSE；第三方许可证随实际组件保留。
+许可证见 LICENSE；第三方许可保留在对应组件目录。

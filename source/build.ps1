@@ -1,40 +1,6 @@
-﻿param([string]$Configuration = 'Release',[string]$OutputDirectory)
-$ErrorActionPreference = 'Stop'
-& (Join-Path $PSScriptRoot 'Fetch-PawnIO.ps1')
-$taskOriginalApp=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../app'))
-$taskAppDir=if($OutputDirectory){[IO.Path]::GetFullPath($OutputDirectory)}else{$taskOriginalApp}
-if($taskAppDir -ne $taskOriginalApp){New-Item -ItemType Directory -Force $taskAppDir | Out-Null;Copy-Item (Join-Path $taskOriginalApp '*') $taskAppDir -Recurse -Force}
-$ErrorActionPreference = 'Stop'
-$taskSensorDir=Join-Path $taskAppDir 'sensors'
-$taskCsc=Join-Path $env:WINDIR 'Microsoft.NET\Framework64\v4.0.30319\csc.exe'
-if(-not (Test-Path -LiteralPath (Join-Path $taskSensorDir 'LibreHardwareMonitorLib.dll'))){throw '缺少官方 LibreHardwareMonitor 0.9.6 运行库：app/sensors'}
-& $taskCsc ("/win32manifest:"+(Join-Path $PSScriptRoot 'app.manifest')) /nologo /target:exe /platform:x64 /optimize+ ("/out:"+(Join-Path $taskSensorDir 'Hhub.Sensors.exe')) ("/reference:"+(Join-Path $taskSensorDir 'LibreHardwareMonitorLib.dll')) /reference:System.Web.Extensions.dll /reference:System.Management.dll /reference:System.Core.dll (Join-Path $PSScriptRoot 'HardwareMonitoring.cs') (Join-Path $PSScriptRoot 'Sensors.cs')
-if($LASTEXITCODE -ne 0){throw '传感器组件构建失败'}
-$taskUpdateExe=Join-Path $taskAppDir 'Hhub.Update.exe'
-& $taskCsc ("/win32manifest:"+(Join-Path $PSScriptRoot 'app.manifest')) /nologo /target:exe /platform:x64 /optimize+ ("/out:"+$taskUpdateExe) /reference:System.Web.Extensions.dll (Join-Path $PSScriptRoot 'UpdateService.cs')
-if($LASTEXITCODE -ne 0){throw '更新服务构建失败'}
-$taskCatalogExe=Join-Path $taskAppDir 'Hhub.Catalog.exe'
-& $taskCsc ("/win32manifest:"+(Join-Path $PSScriptRoot 'app.manifest')) /nologo /target:exe /platform:x64 /optimize+ ("/out:"+$taskCatalogExe) /reference:System.Web.Extensions.dll (Join-Path $PSScriptRoot 'PluginCatalog.cs') (Join-Path $PSScriptRoot 'PluginContract.cs') /main:PluginCatalog
-if($LASTEXITCODE -ne 0){throw 'Plugin catalog build failed'}
-$taskVswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio\Installer\vswhere.exe'
-if (-not (Test-Path -LiteralPath $taskVswhere)) { throw '请先安装 Visual Studio C++ Build Tools 与 Windows SDK。' }
-$taskMsbuild = & $taskVswhere -latest -products '*' -requires Microsoft.Component.MSBuild -find 'MSBuild\**\Bin\amd64\MSBuild.exe' | Select-Object -First 1
-if (-not $taskMsbuild) { throw '未找到 MSBuild。' }
-foreach ($taskProject in @('Hhub.Launcher.vcxproj','Hhub.PluginHost.vcxproj','Hhub.Core.vcxproj','Hhub.vcxproj')) {
-    & $taskMsbuild (Join-Path $PSScriptRoot $taskProject) /restore /m "/p:Configuration=$Configuration" /p:Platform=x64 /p:PreferredToolArchitecture=x64 ("/p:OutDir="+$taskAppDir+[IO.Path]::DirectorySeparatorChar) /verbosity:minimal
-    if ($LASTEXITCODE -ne 0) { throw "构建失败：$taskProject" }
-}
-$taskVsRoot = & $taskVswhere -latest -products '*' -property installationPath
-$taskRedist = Get-ChildItem -LiteralPath (Join-Path $taskVsRoot 'VC\Redist\MSVC') -Directory | Where-Object { Test-Path -LiteralPath (Join-Path $_.FullName 'x64\Microsoft.VC143.CRT') } | Sort-Object { [version]$_.Name } -Descending | Select-Object -First 1
-if ($taskRedist) {
-    $taskCrt = Join-Path $taskRedist.FullName 'x64\Microsoft.VC143.CRT'
-    if (Test-Path -LiteralPath $taskCrt) { Get-ChildItem -LiteralPath $taskCrt -Filter '*.dll' | Copy-Item -Destination ($taskAppDir) -Force }
-}
-$taskAssets=Join-Path $taskAppDir 'assets'
-if(-not (Test-Path -LiteralPath $taskAssets)){throw '缺少 app/assets 产品图目录'}
-& (Join-Path $PSScriptRoot 'Build-HhubIdentity.ps1') -ApplicationDirectory $taskAppDir
-Write-Output ('应用目录：' + (Resolve-Path $taskAppDir).Path)
-
-
-# Optional Windows ML engines are unused by Hhub; keep the deployable UI runtime lean.
-foreach($taskRuntimeName in @('onnxruntime.dll','DirectML.dll')){foreach($taskRuntimeRoot in @($taskAppDir,(Join-Path $taskAppDir 'runtime'))){$taskUnused=Join-Path $taskRuntimeRoot $taskRuntimeName;if(Test-Path -LiteralPath $taskUnused){Remove-Item -LiteralPath $taskUnused}}}
+param([string]$Configuration='Release',[string]$OutputDirectory=(Join-Path $PSScriptRoot '../app'))
+$ErrorActionPreference='Stop'
+if($Configuration -ne 'Release'){throw 'Integrated release builds require Configuration=Release'}
+# Use a complete unpacked application as the runtime base; this entry point and
+# Build-Integrated share the same feature, sensor, core and UI build pipeline.
+& (Join-Path $PSScriptRoot 'Build-Integrated.ps1') -OutputDirectory $OutputDirectory

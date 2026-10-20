@@ -1,9 +1,9 @@
-﻿#pragma once
+#pragma once
 #include <commctrl.h>
 #pragma comment(lib,"comctl32.lib")
 
 namespace hub {
-inline bool unboundedUiResizeTest(){wchar_t value[8]{};GetEnvironmentVariableW(L"HHUB_ALLOW_UNBOUNDED_RESIZE",value,8);return uiMemoryTestProfile()&&value[0]==L'1';}
+
 inline SIZE minimumUiWindowSize(HWND window){
  auto dpi=GetDpiForWindow(window);if(!dpi)dpi=96;
  SIZE minimum{MulDiv(900,dpi,96),MulDiv(640,dpi,96)};

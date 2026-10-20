@@ -1,4 +1,4 @@
-﻿// Process isolation shared by every native plugin, including its page and services.
+// Process isolation shared by every native plugin, including its page and services.
 inline bool nativeModuleLocal=false;
 inline std::map<std::wstring,std::wstring>& pluginFailures(){static std::map<std::wstring,std::wstring> values;return values;}
 inline std::wstring pluginJobName(std::wstring const& id){auto text=to_string(dataDir().wstring());std::vector<unsigned char> bytes(text.begin(),text.end());return L"Local\\Hhub.Plugin."+nativeAssetDigest(bytes).substr(0,20)+L"."+id;}
@@ -14,7 +14,7 @@ struct PluginProcess{
  PluginProcess()=default;PluginProcess(PluginProcess const&)=delete;PluginProcess& operator=(PluginProcess const&)=delete;
  ~PluginProcess(){close();}
  bool alive()const{return process&&WaitForSingleObject(process,0)==WAIT_TIMEOUT;}
- void close(){std::scoped_lock lock(mutex);if(pipe!=INVALID_HANDLE_VALUE){CloseHandle(pipe);pipe=INVALID_HANDLE_VALUE;}if(process){if(WaitForSingleObject(process,300)==WAIT_TIMEOUT)TerminateProcess(process,ERROR_PROCESS_ABORTED);WaitForSingleObject(process,3000);CloseHandle(process);process=nullptr;}pid=0;}
+ void close(){std::scoped_lock lock(mutex);if(pipe!=INVALID_HANDLE_VALUE){if(alive()){try{JsonObject request;put(request,L"kind",std::wstring(L"shutdown"));pluginPipeWrite(pipe,request);}catch(...) {}}CloseHandle(pipe);pipe=INVALID_HANDLE_VALUE;}if(process){if(WaitForSingleObject(process,1500)==WAIT_TIMEOUT)TerminateProcess(process,ERROR_PROCESS_ABORTED);WaitForSingleObject(process,3000);CloseHandle(process);process=nullptr;}pid=0;}
  JsonObject call(JsonObject request){std::scoped_lock lock(mutex);JsonObject reply;if(!alive()||!pluginPipeWrite(pipe,request)||!pluginPipeRead(pipe,reply)){pluginFailures()[owner]=L"插件无响应或异常退出";close();throw hresult_error(HRESULT_FROM_WIN32(ERROR_TIMEOUT),L"插件无响应或已退出，可从插件管理重新打开");}if(!flag(reply,L"ok"))throw hresult_error(E_FAIL,str(reply,L"error").c_str());return reply;}
  void start(std::wstring const& id,std::wstring const& mode,JsonObject initial={},HWND parent=nullptr){
   std::scoped_lock lock(mutex);close();owner=id;verifyNativeAssets(id);auto manifest=nativeManifest(id);auto pipeName=L"\\\\.\\pipe\\Hhub.Plugin."+std::to_wstring(GetCurrentProcessId())+L"."+std::to_wstring(GetTickCount64())+L"."+id;

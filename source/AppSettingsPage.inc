@@ -1,4 +1,4 @@
-﻿ TextBlock appSettingRow(StackPanel const& host,std::wstring const& name,UIElement const& control,std::wstring const& note=L""){
+ TextBlock appSettingRow(StackPanel const& host,std::wstring const& name,UIElement const& control,std::wstring const& note=L""){
   Grid row;row.MinHeight(compactUi?34:40);row.ColumnSpacing(20);
   ColumnDefinition labelColumn;labelColumn.Width({1,GridUnitType::Star});row.ColumnDefinitions().Append(labelColumn);
   ColumnDefinition controlColumn;controlColumn.Width({0,GridUnitType::Auto});row.ColumnDefinitions().Append(controlColumn);
@@ -35,7 +35,7 @@
   toggle(L"appAutoDetect",tr(L"自动识别前台应用"),true);toggle(L"autoUpdate",tr(L"打开 H hub 时检查插件更新"),true);toggle(L"appAutoUpdate",tr(L"打开 H hub 时检查并自动更新应用"),true);
   settingsUpdateStatus=appSettingRow(rows,tr(L"应用与插件更新"),button(tr(L"检查更新"),[this]{invoke(L"checkUpdates");updateSettingsStatus();notice(tr(L"正在检查更新"));}),settingsStatusText());
   auto backgroundActions=stack(true,8);backgroundActions.Children().Append(button(tr(L"回到托盘"),[this]{window.Close();}));
-  backgroundActions.Children().Append(button(tr(L"查看帮助"),[this]{helpDialog(tr(L"运行与更新"),tr(L"关闭窗口后核心留在托盘；右键托盘图标可完全退出。更新只在打开界面或点击检查更新时进行。插件更新需审阅权限并批准；应用自动更新会关闭界面并启动经过 SHA-256 校验的安装包。Windows 设置使用独立按需进程，读取或修改完成后退出。关闭 EQ 或手机遥控将立即停止对应服务，保留配置。"));}));
+  backgroundActions.Children().Append(button(tr(L"查看帮助"),[this]{helpDialog(tr(L"运行与更新"),tr(L"关闭窗口后核心留在托盘；右键托盘图标可完全退出。更新只在打开界面或点击检查更新时进行。插件更新需审阅权限并批准；应用自动更新会关闭界面并启动经过 SHA-256 校验的安装包。插件通过独立进程运行；停止、卸载和清理行为由插件声明的生命周期接口提供。"));}));
   appSettingRow(rows,tr(L"后台运行"),backgroundActions);
  }
 

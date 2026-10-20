@@ -1,4 +1,4 @@
-﻿#ifndef AppRoot
+#ifndef AppRoot
  #define AppRoot "..\release\Hhub-1.0\Hhub"
 #endif
 #ifndef ReleaseOutput
@@ -58,8 +58,6 @@ Source: "{#AppRoot}\assets\hhub.png"; DestDir: "{app}\assets"; Flags: ignorevers
 Source: "{#AppRoot}\assets\keyboard.svg"; DestDir: "{app}\assets"; Flags: ignoreversion
 Source: "{#AppRoot}\assets\mouse.svg"; DestDir: "{app}\assets"; Flags: ignoreversion
 Source: "{#AppRoot}\assets\SOURCES.md"; DestDir: "{app}\assets"; Flags: ignoreversion
-Source: "{#AppRoot}\assets\vt3pro-side.png"; DestDir: "{app}\assets"; Flags: ignoreversion
-Source: "{#AppRoot}\assets\vt3pro.png"; DestDir: "{app}\assets"; Flags: ignoreversion
 Source: "{#AppRoot}\build-info.json"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#AppRoot}\drivers\pawnio\PawnIO_setup.exe"; DestDir: "{app}\drivers\pawnio"; Flags: ignoreversion
 Source: "{#AppRoot}\Hhub.Catalog.exe"; DestDir: "{app}"; Flags: ignoreversion

@@ -1,0 +1,28 @@
+Hhub Audio 1.0 — FxSound 驱动修改版及命名说明
+
+本驱动是基于 FxSound 开源虚拟音频驱动修改的版本，底层音频传输仍沿用
+FxSound 的实现。Hhub 的命名和标识修改用于避免与原 FxSound 驱动冲突。
+上游源码：
+https://github.com/fxsound2/fxsound-driver
+上游版本：c78fc6d031d16bd0a5dbbdff4871cfb8715d343d
+
+Hhub 使用独立的设备、服务、文件名和接口标识，目的是避免与原 FxSound
+驱动在安装、更新、设备识别和卸载时相互覆盖。独立命名不改变上游代码的
+许可归属，也不表示这是 FxSound 官方产品或获得其认可。
+
+主要身份修改（2026-10-19）：
+设备 ROOT\HHUBVAD；服务 HHUBVAD；文件 hhubvad.sys；
+波形接口 HhubWave；拓扑接口 HhubTopology；独立产品及私有媒体分类 GUID。
+底层音频传输实现继续基于上游，Windows 标准音频接口 GUID 保持不变。
+
+保留 FxSound LLC、Microsoft Corporation 及其他上游作者的版权和归属声明。
+上游随附的 GNU Affero General Public License v3 和 Microsoft Limited Public
+License 全文分别见本包 LICENSE 和 license.rtf。各部分按其原有适用许可使用；
+本修改不替换、不放宽、不撤销上游条款，不授予上游商标使用权。
+
+分发本修改版时，应随附本说明、适用许可证全文及对应版本的完整源码和
+构建脚本，并遵守各适用许可的源码提供、修改标注、版权和归属保留要求。
+本包同时提供对应的源码归档，不能用未修改的上游链接替代修改版源码。
+
+独立标识用于消除设备身份冲突；实际音频路由和多软件同时处理的兼容性，
+仍需在取得正式签名后进行同机验证。本开发构建尚未获得微软正式签名。

@@ -1,4 +1,4 @@
-﻿TextBlock devicePluginStatus{nullptr};std::wstring devicePluginConnectionHint;ULONGLONG devicePluginSnapshotTick{};
+TextBlock devicePluginStatus{nullptr};std::wstring devicePluginConnectionHint;ULONGLONG devicePluginSnapshotTick{};
 void clearDevicePluginHeading(){devicePluginStatus=nullptr;devicePluginConnectionHint.clear();}
 std::wstring devicePluginStatusText(){
  JsonObject selected{nullptr};unsigned matches=0;
@@ -27,14 +27,3 @@ void devicePluginHeading(std::wstring const& heading){
  devicePluginStatus=text(L"",13,true);devicePluginStatus.Name(L"DevicePluginStatus");devicePluginStatus.VerticalAlignment(VerticalAlignment::Center);Grid::SetColumn(devicePluginStatus,2);identity.Children().Append(devicePluginStatus);updateDevicePluginHeading();header.Children().Append(identity);
  auto actions=stack(true,8);actions.Name(L"DevicePluginProfiles");actions.HorizontalAlignment(HorizontalAlignment::Right);actions.VerticalAlignment(VerticalAlignment::Center);appendCompactPluginProfiles(actions);Grid::SetColumn(actions,1);header.Children().Append(actions);page.Children().Append(header);
 }
-std::wstring devicePluginHeaderBootstrap(){return LR"HEADER(
-<style>header>.hint,#device-battery{display:none!important}</style>
-<script>window.addEventListener('DOMContentLoaded',()=>{
- const header=document.querySelector('main>header');if(!header)return;
- const declared=header.querySelector('h1 span')?.textContent?.trim()||'';
- const labels={'2.4 GHz':'2.4 GHz','2.4GHz':'2.4 GHz','2.4G':'2.4 GHz','Bluetooth':'Bluetooth','蓝牙':'Bluetooth','USB':'USB','有线':'USB'};
- if(labels[declared])chrome.webview.postMessage({type:'hhub.device.connection',connection:labels[declared]});
- header.querySelectorAll(':scope>.hint').forEach(node=>node.remove());
- if(!header.querySelector('button,input,select,a'))header.style.setProperty('display','none','important');
-});</script>
-)HEADER";}
