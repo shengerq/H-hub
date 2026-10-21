@@ -43,7 +43,7 @@ struct SensorTransport : MonitorProjection {
  // Pause releases the helper and sensor cache, rather than retaining an idle reader.
  void pauseSensors(){stopSensors(true);}
  void startElevated(){
-  if(elevation||(sensorCache&&flag(sensorCache,L"elevated")))return;
+  if(elevation||(elevatedTransport&&worker&&WaitForSingleObject(worker,0)==WAIT_TIMEOUT))return;
   autoElevationAttempted=true;
   GUID nonce{};check_hresult(CoCreateGuid(&nonce));wchar_t token[64]{};StringFromGUID2(nonce,token,64);auto name=L"Hhub.Sensors."+userSid()+L"."+token,full=L"\\\\.\\pipe\\"+name;
   auto descriptor=L"D:P(A;;GA;;;"+userSid()+L")";PSECURITY_DESCRIPTOR security{};if(!ConvertStringSecurityDescriptorToSecurityDescriptorW(descriptor.c_str(),SDDL_REVISION_1,&security,nullptr))throw hresult_error(HRESULT_FROM_WIN32(GetLastError()));

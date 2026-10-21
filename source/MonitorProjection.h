@@ -54,7 +54,8 @@ struct MonitorProjection {
   o.SetNamedValue(L"unavailableReasons",reasons);
   for(auto key:{L"cpuTemp",L"cpuClock",L"cpuPower",L"gpu",L"gpuClock",L"gpuTemp",L"gpuPower",L"memory",L"diskReadMB",L"diskWriteMB",L"diskUsedGB"}){
    if(numeric(o,key)>=0)put(availability,key,std::wstring(L"available"));
-   else if(!ready)put(availability,key,std::wstring(L"initializing"));
+   else if(flag(o,L"sensorElevationPending"))put(availability,key,std::wstring(L"authorizing"));
+   else if(!ready||(!elevated&&flag(o,L"sensorHasAdminSession")))put(availability,key,std::wstring(L"initializing"));
    else if(!flag(o,L"pawnInstalled")&&str(o,L"monitorBackend",L"librehardwaremonitor")==L"librehardwaremonitor"&&std::wstring(key).rfind(L"cpu",0)==0)put(availability,key,std::wstring(L"needsDriver"));
    else if(!elevated&&(std::wstring(key).rfind(L"cpu",0)==0||std::wstring(key)==L"fan"||std::wstring(key)==L"diskTemp"))put(availability,key,std::wstring(L"needsElevation"));
    else if(std::wstring(key)==L"fan")put(availability,key,std::wstring(L"unsupported"));

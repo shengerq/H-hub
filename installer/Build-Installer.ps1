@@ -6,4 +6,4 @@ foreach($taskName in @('Hhub.exe','core/Hhub.exe','Hhub.PluginHost.exe','feature
 New-Item -ItemType Directory -Force $taskOutput|Out-Null
 & $Compiler ("/DAppRoot=$taskApp") ("/DReleaseOutput=$taskOutput") (Join-Path $PSScriptRoot 'Hhub.Integrated.iss')
 if($LASTEXITCODE -ne 0){throw 'Installer compilation failed'}
-Get-FileHash -LiteralPath (Join-Path $taskOutput 'Hhub-Setup-1.0-Integrated-EQ-r4.exe') -Algorithm SHA256
+Get-FileHash -LiteralPath (Join-Path $taskOutput 'Hhub-Setup-1.0-Integrated-EQ-r6.exe') -Algorithm SHA256

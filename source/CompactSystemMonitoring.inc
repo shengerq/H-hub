@@ -1,4 +1,4 @@
-﻿// Original content-sized card proportions, retaining the new text and trend presentation.
+// Original content-sized card proportions, retaining the new text and trend presentation.
 TextBlock homeCompactLine(std::function<std::wstring(JsonObject)> format){
  auto label=text(L"",11,true);label.TextWrapping(TextWrapping::NoWrap);label.TextTrimming(TextTrimming::CharacterEllipsis);
  auto update=[this,label,format](JsonObject){auto value=format(homeSnapshot());if(label.Text()!=value){label.Text(value);ToolTipService::SetToolTip(label,box_value(value));}};update(monitoring());monitorBindings.push_back(update);return label;
@@ -18,6 +18,7 @@ Canvas homeTrend(std::wstring key){
  };onSizeChanged(chart,[update](auto const&,auto const&){update(JsonObject{});});monitorBindings.push_back(update);update(monitoring());return chart;
 }
 void nativeSystemMonitoring(){
+ page.Children().Append(sensorAuthorizationControls());
  if(shortUi){
   Grid summary;summary.ColumnSpacing(12);
   for(int i=0;i<5;i++){ColumnDefinition column;column.Width(i==4?GridLength{0,GridUnitType::Auto}:GridLength{1,GridUnitType::Star});summary.ColumnDefinitions().Append(column);}

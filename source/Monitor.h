@@ -14,11 +14,11 @@ struct Monitor : SensorTransport {
   for(auto const& adapter:adapters){JsonObject g;put(g,L"name",adapter.name);number(g,L"usage",-1);number(g,L"usedGB",-1);number(g,L"totalGB",-1);gpus.Append(g);}
   o.SetNamedValue(L"gpus",gpus);put(o,L"gpuName",adapters.empty()?std::wstring(L"未识别显卡"):adapters[0].name);number(o,L"gpu",-1);number(o,L"gpuUsedGB",-1);number(o,L"gpuTotalGB",-1);
   sensors(o);
-  aggregateSensors(o,o.GetNamedArray(L"sensors",JsonArray{}));
   if(allowAutoElevation&&needsAutoElevation(o,autoElevationAttempted)){
    try{startElevated();}catch(hresult_error const& e){autoElevationAttempted=true;elevationError=std::wstring(e.message());}catch(...){autoElevationAttempted=true;elevationError=L"自动授权采集启动失败，可手动重试";}
    put(o,L"sensorElevationPending",elevation!=nullptr);put(o,L"sensorElevationError",elevationError);
   }
+  aggregateSensors(o,o.GetNamedArray(L"sensors",JsonArray{}));
   put(o,L"sensorAutoElevationAttempted",autoElevationAttempted);cache=o;return o;
  }
 };

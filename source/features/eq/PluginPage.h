@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include "Localization.h"
 #include "NativeEqPage.h"
 #include <commdlg.h>
@@ -7,15 +7,15 @@ struct PluginPage {
  inline static std::wstring creationStage;
  HWND window{};HBRUSH background{};std::unique_ptr<NativeEqPage> editor;
  JsonObject state,config;std::wstring app,output,source;std::vector<std::wstring> appIds;int presetIndex=-1;ULONGLONG previewTick{};bool dirty=false,loading=false,dark=false,enabledState=false;
- virtual ~PluginPage(){if(window)DestroyWindow(window);editor.reset();if(background)DeleteObject(background);}
+ virtual ~PluginPage(){if(window)DestroyWindow(window);editor.reset();UnregisterClassW(L"Hhub.EQ.PluginPage",eqWindowModule());if(background)DeleteObject(background);}
  JsonObject invoke(std::wstring const& op,JsonObject body={}){auto next=call(op,body);state=next;return next;}
  JsonObject runtime(){return state.GetNamedObject(L"eqRuntime",JsonObject{});}
  virtual void notify(std::wstring const&){}
  void create(HWND parent,JsonObject initial){
   creationStage=L"runtime";state=call(L"eqRuntime");initializeLanguage(str(state.GetNamedObject(L"settings"),L"language",L"system"));app=str(initial,L"app");output=str(initial,L"output");dark=flag(initial,L"dark");
-  WNDCLASSW cls{};cls.hInstance=GetModuleHandleW(nullptr);cls.lpfnWndProc=proc;cls.lpszClassName=L"Hhub.EQ.PluginPage";cls.hCursor=LoadCursorW(nullptr,IDC_ARROW);cls.hbrBackground=(HBRUSH)(COLOR_WINDOW+1);if(!RegisterClassW(&cls)&&GetLastError()!=ERROR_CLASS_ALREADY_EXISTS)throw hresult_error(HRESULT_FROM_WIN32(GetLastError()));
-  background=CreateSolidBrush(dark?RGB(31,38,47):RGB(255,255,255));creationStage=L"page window";auto created=CreateWindowExW(WS_EX_LAYERED,cls.lpszClassName,L"Hhub EQ 插件",WS_CHILD|WS_VISIBLE|WS_CLIPCHILDREN,0,0,1,1,parent,nullptr,cls.hInstance,this);if(!created)throw hresult_error(E_FAIL,L"插件页面父容器创建失败");check_bool(SetLayeredWindowAttributes(window,0,255,LWA_ALPHA));
-  creationStage=L"editor";editor=std::make_unique<NativeEqPage>();editor->create(window);editor->changed=[this](int kind,int band,double value){change(kind,band,value);};editor->committed=[this]{saveConfig();};editor->resetRequested=[this]{config.GetNamedArray(L"bands").Clear();for(int i=0;i<12;i++)config.GetNamedArray(L"bands").Append(JsonValue::CreateNumberValue(0));presetIndex=-1;put(config,L"preset",std::wstring(L"custom"));refreshEditor();saveConfig();};
+  WNDCLASSW cls{};cls.hInstance=eqWindowModule();cls.lpfnWndProc=proc;cls.lpszClassName=L"Hhub.EQ.PluginPage";cls.hCursor=LoadCursorW(nullptr,IDC_ARROW);cls.hbrBackground=nullptr;if(!RegisterClassW(&cls)&&GetLastError()!=ERROR_CLASS_ALREADY_EXISTS)throw hresult_error(HRESULT_FROM_WIN32(GetLastError()));
+  background=CreateSolidBrush(dark?RGB(31,38,47):RGB(255,255,255));creationStage=L"page window";auto created=CreateWindowExW(WS_EX_LAYERED,cls.lpszClassName,L"Hhub EQ 插件",WS_CHILD|WS_CLIPSIBLINGS|WS_CLIPCHILDREN,0,0,1,1,parent,nullptr,cls.hInstance,this);if(!created)throw hresult_error(E_FAIL,L"插件页面父容器创建失败");check_bool(SetLayeredWindowAttributes(window,0,255,LWA_ALPHA));
+  creationStage=L"editor";editor=std::make_unique<NativeEqPage>();editor->dark=dark;editor->create(window);editor->changed=[this](int kind,int band,double value){change(kind,band,value);};editor->committed=[this]{saveConfig();};editor->resetRequested=[this]{config.GetNamedArray(L"bands").Clear();for(int i=0;i<12;i++)config.GetNamedArray(L"bands").Append(JsonValue::CreateNumberValue(0));presetIndex=-1;put(config,L"preset",std::wstring(L"custom"));refreshEditor();saveConfig();};
   loadConfig();SetTimer(window,1,2000,nullptr);layout();
  }
  void loadConfig(){loading=true;auto data=runtime();auto outputs=data.GetNamedArray(L"outputs",JsonArray{});if(output.empty())output=str(data,L"defaultOutput");bool found=false;for(auto const& v:outputs)if(str(v.GetObject(),L"id")==output)found=true;if(!found)output=outputs.Size()?str(outputs.GetObjectAt(0),L"id"):L"";auto sources=data.GetNamedArray(L"sources",JsonArray{});source=sources.Size()?str(sources.GetObjectAt(0),L"id"):L"";
