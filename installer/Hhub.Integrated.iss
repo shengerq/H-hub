@@ -16,7 +16,7 @@ ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 MinVersion=10.0.22000
 OutputDir={#ReleaseOutput}
-OutputBaseFilename=Hhub-Setup-1.0-Integrated-EQ-r3
+OutputBaseFilename=Hhub-Setup-1.0-Integrated-EQ-r4
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern
@@ -26,6 +26,8 @@ CloseApplications=yes
 RestartApplications=no
 DisableProgramGroupPage=yes
 SetupLogging=yes
+; Re-evaluate default tasks on upgrades instead of inheriting an earlier skipped EQ task.
+UsePreviousTasks=no
 
 [Languages]
 Name: "chinesesimp"; MessagesFile: "ChineseSimplified.isl"
@@ -56,6 +58,7 @@ Source: "{#AppRoot}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs cr
 Source: "Prepare-Upgrade.ps1"; Flags: dontcopy
 Source: "Prepare-Upgrade.ps1"; DestDir: "{app}\installer"; DestName: "Stop-Hhub.ps1"; Flags: ignoreversion
 Source: "Remove-UserData.ps1"; DestDir: "{app}\installer"; Flags: ignoreversion
+Source: "Verify-AudioDriverReport.ps1"; Flags: dontcopy
 
 [InstallDelete]
 Type: filesandordirs; Name: "{app}\runtime"
@@ -108,16 +111,26 @@ begin
 end;
 
 procedure CurStepChanged(Step: TSetupStep);
-var Code, Choice: Integer; Exe, ReportPath: String; Done: Boolean;
+var Code, ReportCode, Choice: Integer; Exe, ReportPath, VerifyCommand: String; Done: Boolean;
 begin
   if (Step = ssPostInstall) and WizardIsTaskSelected('eqdriver') then begin
     Exe := ExpandConstant('{app}\features\eq\HhubAudioDriverSetup.exe');
     ReportPath := ExpandConstant('{localappdata}\HhubPrototype\audio-driver-setup.json');
+    ExtractTemporaryFile('Verify-AudioDriverReport.ps1');
+    VerifyCommand := '-NoProfile -ExecutionPolicy Bypass -File "' + ExpandConstant('{tmp}\Verify-AudioDriverReport.ps1') + '" -ReportPath "' + ReportPath + '"';
     Done := False;
     repeat
       Code := -1;
+      if FileExists(ReportPath) then DeleteFile(ReportPath);
+      Done := False;
       if ShellExec('runas', Exe, '--from-setup "' + ReportPath + '"', ExpandConstant('{app}'), SW_HIDE, ewWaitUntilTerminated, Code) then
         Done := (Code = 0) or (Code = 3010);
+      if Done then begin
+        ReportCode := -1;
+        Done := Exec(ExpandConstant('{sys}\WindowsPowerShell\v1.0\powershell.exe'), VerifyCommand, '', SW_HIDE, ewWaitUntilTerminated, ReportCode);
+        Done := Done and (ReportCode = 0);
+        Log('EQ driver report verification exit code: ' + IntToStr(ReportCode));
+      end;
       if not Done then begin
         Choice := MsgBox(FmtMessage(CustomMessage('DriverFailure'), [ReportPath]), mbError, MB_RETRYCANCEL);
         if Choice <> IDRETRY then RaiseException('EQ 驱动安装或改名未完成。');
