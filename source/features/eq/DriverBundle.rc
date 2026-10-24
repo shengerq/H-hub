@@ -1,6 +1,0 @@
-﻿#pragma code_page(65001)
-201 RCDATA "C:\\Users\\Administrator\\Desktop\\新建文件夹\\version-one\\main-repo\\source\\features\\eq\\driver\\payload\\fxvad.inf"
-202 RCDATA "C:\\Users\\Administrator\\Desktop\\新建文件夹\\version-one\\main-repo\\source\\features\\eq\\driver\\payload\\fxvad.sys"
-203 RCDATA "C:\\Users\\Administrator\\Desktop\\新建文件夹\\version-one\\main-repo\\source\\features\\eq\\driver\\payload\\fxvadntamd64.cat"
-204 RCDATA "C:\\Users\\Administrator\\Desktop\\新建文件夹\\version-one\\main-repo\\source\\features\\eq\\driver\\payload\\LICENSE.txt"
-205 RCDATA "C:\\Users\\Administrator\\Desktop\\新建文件夹\\version-one\\main-repo\\source\\features\\eq\\driver\\payload\\license.rtf"

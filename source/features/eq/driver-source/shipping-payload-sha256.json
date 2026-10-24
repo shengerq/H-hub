@@ -1,9 +1,0 @@
-{
-  "driver/payload/fxvad.inf": "ba175cfddd91b87bdda3f1df2a70249e1742e846b843381eb0438b70f91a110a",
-  "driver/payload/fxvad.sys": "425629b6309000013e8cd1a9b827bee365d21c9f743873aadd0c3bc96a999d2a",
-  "driver/payload/fxvadntamd64.cat": "25c8dae186155d20f74feedefb4f84161e4215925b8fd0c898f68f3e50ebcd7d",
-  "driver/payload/license.rtf": "77b42c31c00e37c3d090287104dddda02b265fb117ce9426506ff6bfee38730a",
-  "driver/payload/LICENSE.txt": "6f1e622c82a380075843bb084a7ec3b1f1d12a4a02526d75e78b0924a860aa75",
-  "driver/payload/README.md": "6ab0edbb908efff22f498a168d4085d8d161c24ba599c15a419c01c4f4aa1e71",
-  "driver/payload/SHA256.json": "6b904f4e465362ef18f9ee12849cbe7268500fd25a94f04f1bbd9666a3c8cafb"
-}
